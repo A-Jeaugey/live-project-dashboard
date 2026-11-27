@@ -1,0 +1,122 @@
+# Réglages non secrets du tableau de bord. Les secrets vont dans `.env`, jamais ici.
+
+[projet]
+nom = "5 Nights at EPITA"
+fuseau = "Europe/Paris"
+
+# Noms exacts des labels GitLab qui définissent les colonnes du tableau.
+# La comparaison ignore la casse et la façon dont les accents sont encodés.
+[colonnes]
+idee = "Idée"
+a_faire = "À faire"
+en_cours = "En cours"
+
+[seuils]
+jours_sans_activite = 14   # une tâche « En cours » est dite dormante au-delà
+heures_relecture = 48      # une merge request est signalée au-delà
+fenetre_fait_jours = 14    # durée d'affichage des tâches fermées dans la colonne « Fait »
+
+# Dernière version jouable. regle = "pipeline" (dernier pipeline réussi de la branche par défaut),
+# "tag" (dernier tag correspondant à motif_tag) ou "commit" (dernier commit de la branche par défaut).
+[version_jouable]
+regle = "pipeline"
+motif_tag = "jouable-*"
+
+# Labels de domaine. La couleur sert si le label n'existe pas encore dans GitLab.
+[[domaines]]
+nom = "gameplay"
+couleur = "#3F7BD9"
+
+[[domaines]]
+nom = "profs"
+couleur = "#D9482B"
+
+[[domaines]]
+nom = "3d"
+couleur = "#8257D6"
+
+[[domaines]]
+nom = "son"
+couleur = "#1A9A7C"
+
+[[domaines]]
+nom = "code"
+couleur = "#5E9C2E"
+
+[[domaines]]
+nom = "ui"
+couleur = "#D9941A"
+
+[[domaines]]
+nom = "orga"
+couleur = "#6F7B8C"
+
+[[membres]]
+prenom = "Arthur"
+gitlab = "arthur.jeaugey"
+discord = "para_bellum._"
+
+[[membres]]
+prenom = "Théo"
+gitlab = "theo.wu"
+discord = "layxq"
+
+[[membres]]
+prenom = "Samuel"
+gitlab = "samuel.mopty"
+discord = "doc_bob"
+
+[[membres]]
+prenom = "Louis"
+gitlab = "louis.landanger"
+discord = "heisenberg4576"
+
+[[membres]]
+prenom = "Eliott"
+gitlab = "eliott.damagnez"
+discord = "this_is_some1"
+
+# Calendrier officiel. `semaine_du` est le lundi de la semaine de l'échéance : le compte à rebours
+# vise ce lundi. Quand la date réelle est connue, ajouter `date_exacte = AAAA-MM-JJ`.
+# `nuit` numérote les cinq échéances à préparer. `jalon` (facultatif) donne le titre du jalon
+# GitLab s'il diffère de `titre`.
+[[echeances]]
+cle = "groupes"
+titre = "Constitution des groupes"
+titre_court = "Groupes"
+semaine_du = 2026-10-19
+
+[[echeances]]
+cle = "cdst"
+titre = "Remise du CdST"
+titre_court = "CdST"
+semaine_du = 2026-12-07
+nuit = 1
+
+[[echeances]]
+cle = "validation-cdst"
+titre = "Validation du CdST"
+titre_court = "Validation"
+semaine_du = 2026-12-14
+nuit = 2
+
+[[echeances]]
+cle = "soutenance-1"
+titre = "Première soutenance"
+titre_court = "Soutenance 1"
+semaine_du = 2027-01-04
+nuit = 3
+
+[[echeances]]
+cle = "soutenance-2"
+titre = "Deuxième soutenance"
+titre_court = "Soutenance 2"
+semaine_du = 2027-03-29
+nuit = 4
+
+[[echeances]]
+cle = "soutenance-finale"
+titre = "Soutenance finale"
+titre_court = "Finale"
+semaine_du = 2027-05-31
+nuit = 5
