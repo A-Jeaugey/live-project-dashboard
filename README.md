@@ -114,6 +114,7 @@ Discord : voir [`docs/DISCORD_SETUP.md`](docs/DISCORD_SETUP.md).
 | [`docs/UX.md`](docs/UX.md) | Parcours, écrans, règles du tableau, apparence |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Stack, flux de données, connexion, hébergement, contraintes de l'instance GitLab |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Décisions et leur statut |
+| [`docs/DEPLOIEMENT.md`](docs/DEPLOIEMENT.md) | Déploiement pas à pas sur le serveur, et ce qu'il reste à vérifier en réel |
 | [`docs/DISCORD_SETUP.md`](docs/DISCORD_SETUP.md) | Salons, notifications natives de GitLab, préparation du bot |
 | [`AGENTS.md`](AGENTS.md) | Règles pour les IA qui travaillent sur ce repo |
 | [`docs/ai/AI_LOG.md`](docs/ai/AI_LOG.md), [`docs/ai/journal/`](docs/ai/journal/) | Registre et journaux de l'usage de l'IA |

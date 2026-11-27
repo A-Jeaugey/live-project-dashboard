@@ -70,10 +70,9 @@ Détail : `docs/DECISIONS.md`.
 ## À faire par un membre
 
 - [ ] Montrer les captures de `docs/apercu/` aux autres membres, ou lancer l'outil en local (README).
-- [ ] **Révoquer le token GitLab « Claude code »** créé le 27 novembre avec toutes les portées, et en créer un en
-      `read_api` (rôle Reporter) pour le serveur.
-- [ ] Créer l'application OAuth, le tunnel Cloudflare et le `.env`, puis déployer (README, « Installer sur le
-      serveur »).
+- [ ] Déployer sur le serveur d'Arthur : confié à une session Claude Code ouverte sur ce serveur, avec le brief
+      `docs/DEPLOIEMENT.md`. Arthur doit y créer lui-même le token de projet (`read_api`, rôle Reporter),
+      l'application OAuth et le tunnel Cloudflare.
 - [ ] Créer le webhook GitLab et cliquer « Test ».
 - [ ] Créer les salons Discord et activer les notifications natives (`docs/DISCORD_SETUP.md`).
 - [ ] Créer dans GitLab les labels `Idée`, `À faire`, `En cours`, les sept labels de domaine et les jalons, ou
@@ -91,7 +90,8 @@ Les réponses par défaut de la session de cadrage sont appliquées. Restent à 
 
 ## Prochaine étape
 
-Démonstration de la phase 1 au groupe. Après validation : **phase 2, les actions**.
+Déploiement sur le serveur (`docs/DEPLOIEMENT.md`), puis démonstration de la phase 1 au groupe. Après
+validation : **phase 2, les actions**.
 
 1. Module d'écriture unique : prendre une tâche, créer une idée, changer de colonne ; création des labels et
    des jalons manquants après confirmation.
