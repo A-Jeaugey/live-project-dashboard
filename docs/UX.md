@@ -1,8 +1,8 @@
 # Expérience utilisateur
 
-> Statut : **proposition du 27 novembre 2026, en attente de validation du groupe.**
-> Les éléments marqués *(ajout proposé)* ne figurent pas dans le cahier des charges : ils ne seront développés
-> que s'ils sont validés.
+> Statut : parcours et écrans **validés par Arthur le 27 novembre 2026**, ajouts compris. La première maquette
+> a été rejetée pour son apparence (trop générique) ; la direction visuelle actuelle est décrite en section 8.
+> Les éléments marqués *(ajout proposé)* ne figuraient pas dans le cahier des charges ; ils ont été acceptés.
 
 ## 1. Idées directrices
 
@@ -22,14 +22,17 @@
 Six entrées, identiques sur ordinateur (barre du haut) et sur téléphone (barre du bas, les deux dernières
 derrière « Plus ») :
 
-| Entrée | Question | Contenu du cahier des charges couvert |
-|---|---|---|
-| **Aujourd'hui** | Où en est-on, et qu'est-ce qui m'attend ? | Compte à rebours, activité récente, résumé équipe et santé |
-| **Tableau** | Qu'est-ce que je prends ? | Tableau des tâches, filtres, actions |
-| **Équipe** | Qui fait quoi ? | Qui travaille sur quoi, membres sans tâche, tâches dormantes |
-| **Échéances** | Est-on prêts ? | Jalons, comptes à rebours, avancement |
-| **Projet** | Le dépôt est-il en bonne santé ? | Dernière version jouable, merge requests en attente, pipelines, fil d'activité complet |
-| **Transparence IA** | Comment utilise-t-on l'IA ? | Lecture d'`AI_LOG.md` et des commits `[IA]`, répartitions |
+| Entrée | Nom à l'écran | Question | Contenu du cahier des charges couvert |
+|---|---|---|---|
+| **Aujourd'hui** | la copie du jour | Où en est-on, et qu'est-ce qui m'attend ? | Compte à rebours, activité récente, résumé équipe et santé |
+| **Tableau** | Tableau | Qu'est-ce que je prends ? | Tableau des tâches, filtres, actions |
+| **Équipe** | Feuille d'appel | Qui fait quoi ? | Qui travaille sur quoi, membres sans tâche, tâches dormantes |
+| **Échéances** | Cahier de textes | Est-on prêts ? | Jalons, comptes à rebours, avancement, bilan à copier |
+| **Projet** | Projet | Le dépôt est-il en bonne santé ? | Dernière version jouable, merge requests en attente, pipelines, journal complet, état de la synchro |
+| **Transparence IA** | (phase 3) | Comment utilise-t-on l'IA ? | Lecture d'`AI_LOG.md` et des commits `[IA]`, répartitions |
+
+Les cinq échéances à préparer sont numérotées **nuit 1 à nuit 5** (le projet s'appelle *5 Nights at EPITA* et il
+reste exactement cinq échéances). Le nom complet de l'échéance reste toujours affiché à côté.
 
 Deux vues sans entrée dans le menu, ouvertes depuis « Aujourd'hui », la palette de commandes ou un lien Discord :
 **Point hebdo** *(ajout proposé)* et **détail d'une tâche**.
@@ -111,8 +114,8 @@ les mêmes filtres chaque lundi.
 
 ## 4. Écrans
 
-Une maquette des écrans principaux existe (lien dans `docs/ETAT_ACTUEL.md`). Les données qu'elle affiche sont des
-exemples.
+La première maquette (hors du repo) est abandonnée. La référence est l'application elle-même, lancée avec des
+données d'exemple (`README.md`).
 
 ### 4.1 Aujourd'hui
 
@@ -271,9 +274,32 @@ Chaque déplacement est **une seule** requête GitLab sur l'issue.
 
 **Je prends** équivaut à « vers En cours » avec assignation à soi.
 
-## 8. Apparence
+## 8. Apparence : « le carnet »
 
-Direction proposée, nommée **« Veille de nuit »** : une console sobre et dense, sur fond bleu nuit, texte blanc
-cassé, un seul accent ambre réservé à ce qui demande de l'attention et un vert d'eau pour ce qui va bien. Titres
-en Space Grotesk, texte en Inter, numéros et comptes à rebours en JetBrains Mono. Un thème clair suivra le réglage
-du système. Les couleurs de domaine ne portent jamais l'information seules : le nom du domaine est toujours écrit.
+Le projet est présenté comme une **copie d'élève annotée par un prof** : le jeu met en scène des enseignants,
+le carnet leur emprunte leur stylo rouge.
+
+| Élément | Rôle |
+|---|---|
+| Papier crème, encre noire | Le contenu |
+| **Stylo rouge**, écriture manuscrite | Uniquement ce qui demande de l'attention : retards, tâches qui dorment, manques |
+| **Stylo bleu**, écriture manuscrite | Ce que l'on fait soi-même (« en cours ») et les liens |
+| Marge rouge à gauche des listes | L'endroit où lire les alertes : parcourir la marge suffit |
+| En-tête de copie | Sur l'accueil : nom, épreuve en cours, et dans la case de la note, le compte à rebours entouré |
+| Appréciation | Une à trois phrases calculées (sans IA) qui résument ce qui presse |
+| Post-it jaunes | Les idées |
+| Fiches bristol | Les tâches décidées ; tampon « FAIT » sur celles qui sont fermées |
+| Photos d'identité | Les membres |
+| Gommettes | Les domaines ; le nom du domaine est toujours écrit à côté |
+| Cases cochées | L'avancement d'un jalon |
+| Intercalaires | La navigation |
+
+La nuit, la copie devient un **tableau noir** et les stylos des craies ; les post-it restent jaunes. Le thème suit
+le réglage du système et se change d'un clic.
+
+Typographie : Instrument Serif pour les titres, IBM Plex Sans pour le texte, IBM Plex Mono pour les numéros et
+les dates, Caveat pour l'écriture manuscrite. Les polices sont servies par l'application elle-même, sans appel à
+un service extérieur.
+
+Règles tenues partout : contraste suffisant dans les deux thèmes, zones tactiles d'au moins 44 px sur téléphone,
+aucune information portée par la couleur seule, animations coupées si le système le demande.
