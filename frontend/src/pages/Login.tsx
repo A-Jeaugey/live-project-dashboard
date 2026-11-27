@@ -9,7 +9,7 @@ function Cover({ children }: { children: ReactNode }) {
 }
 
 const REFUSALS: Record<string, string> = {
-  non_membre: "Ce compte GitLab n'est pas membre du projet du jeu. Le poste est réservé au groupe.",
+  non_membre: "Ce compte GitLab n'est pas membre du projet du jeu. L'accès est réservé au groupe.",
   connexion: "La connexion avec GitLab n'a pas abouti. Réessaie.",
   gitlab: "GitLab ne répond pas pour l'instant. Réessaie dans un moment.",
   configuration: "La connexion n'est pas encore configurée sur le serveur. Préviens Arthur.",
@@ -28,7 +28,7 @@ export function Login() {
   const reason = new URLSearchParams(window.location.search).get("erreur");
   return (
     <Cover>
-      <div className="m text-go">POSTE DE NUIT · ACCÈS RÉSERVÉ AU GROUPE</div>
+      <div className="m text-go">TABLEAU DE BORD · ACCÈS RÉSERVÉ AU GROUPE</div>
       <h1 className="x mt-5 text-[clamp(44px,9vw,84px)]">
         5 Nights
         <br />

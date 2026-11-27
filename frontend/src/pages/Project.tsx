@@ -16,7 +16,7 @@ const PIPELINE_STATUS: Record<string, string> = {
   manual: "manuel",
 };
 
-/** Santé du dépôt : version jouable, relectures, pipelines, main courante complète, état de la synchro. */
+/** Santé du dépôt : version jouable, relectures, pipelines, journal complet, état de la synchro. */
 export function Project() {
   const m = useModel();
   const { snap, now } = m;
@@ -80,7 +80,7 @@ export function Project() {
             </ul>
           </Pane>
 
-          <Pane n="02" title="Main courante" meta={`${snap.activity.length} derniers événements`}>
+          <Pane n="02" title="Journal" meta={`${snap.activity.length} derniers événements`}>
             <ul className="rows" style={{ "--gutter": "92px" } as React.CSSProperties}>
               {snap.activity.length === 0 ? (
                 <li>

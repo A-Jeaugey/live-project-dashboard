@@ -2,22 +2,17 @@ import { Link } from "react-router";
 import { Agent, IssueLink, OutLink, PageHead, Pane } from "../components/bits";
 import { ago, countdown, duration, plural } from "../lib/format";
 import { useModel } from "../lib/model";
-import { roomOf } from "../lib/rooms";
 
-/** L'équipe : qui est en poste, dans quelle salle, sur quoi. */
+/** L'équipe : qui fait quoi, qui n'a rien, qui doit relire. */
 export function Team() {
   const m = useModel();
   const { snap, now } = m;
-  const domains = snap.domains.map((d) => d.name);
-
   const rows = snap.members.map((member) => {
     const mine = (usernames: string[]) => usernames.includes(member.username);
     const doing = snap.issues.filter((i) => i.column === "doing" && mine(i.assignees));
-    const where = doing[0]?.domains.find((d) => domains.includes(d));
     return {
       member,
       doing,
-      room: doing.length === 0 ? null : where ? roomOf(where) : "Sans salle",
       reviews: snap.merge_requests.filter((mr) => mr.waiting_review && mine(mr.reviewers) && !mine(mr.approved_by)),
       authored: snap.merge_requests.filter((mr) => mr.author === member.username),
       done: snap.issues.filter((i) => m.isRecentlyDone(i) && mine(i.assignees)).length,
@@ -25,8 +20,8 @@ export function Team() {
     };
   });
 
-  const posted = rows.filter((r) => r.doing.length > 0).length;
-  const loose = rows.length - posted;
+  const busy = rows.filter((r) => r.doing.length > 0).length;
+  const idle = rows.length - busy;
   const asleep = snap.issues
     .filter((i) => i.stale_days !== null)
     .sort((a, b) => (b.stale_days ?? 0) - (a.stale_days ?? 0));
@@ -34,25 +29,27 @@ export function Team() {
 
   return (
     <div className="space-y-10 py-8 md:py-10">
-      <PageHead title="Équipe" kicker="03 · QUI EST OÙ, ET SUR QUOI">
-        {String(posted).padStart(2, "0")} EN POSTE
-        {loose > 0 && (
+      <PageHead title="Équipe" kicker="03 · QUI FAIT QUOI">
+        {String(busy).padStart(2, "0")} SUR UNE TÂCHE
+        {idle > 0 && (
           <>
             {" · "}
-            <span className="text-warn">{String(loose).padStart(2, "0")} DANS LE COULOIR</span>
+            <span className="text-warn">{String(idle).padStart(2, "0")} SANS TÂCHE</span>
           </>
         )}
       </PageHead>
 
       {/* Téléphone : une fiche par membre. */}
       <ul className="list-none space-y-3 p-0 md:hidden">
-        {rows.map(({ member, doing, room, reviews, done, lastSeen }) => (
+        {rows.map(({ member, doing, reviews, done, lastSeen }) => (
           <li key={member.username} className="border border-line2 p-4">
             <div className="flex items-center gap-3">
               <Agent username={member.username} size={40} />
               <div className="min-w-0 flex-1">
                 <div className="x text-[17px] normal-case">{member.first_name}</div>
-                <div className={`c mt-1 text-[12px] ${room ? "text-go" : "text-warn"}`}>{room ?? "Dans le couloir"}</div>
+                <div className={`c mt-1 text-[12px] ${doing.length > 0 ? "text-go" : "text-warn"}`}>
+                  {doing.length > 0 ? `${doing.length} en cours` : "Sans tâche"}
+                </div>
               </div>
               <div className="m text-right text-faint">
                 {done} rendu
@@ -90,9 +87,6 @@ export function Team() {
               <th scope="col" className="c w-[210px]">
                 Membre
               </th>
-              <th scope="col" className="c w-[170px]">
-                Salle
-              </th>
               <th scope="col" className="c">
                 En cours
               </th>
@@ -108,7 +102,7 @@ export function Team() {
             </tr>
           </thead>
           <tbody>
-            {rows.map(({ member, doing, room, reviews, authored, done, lastSeen }) => (
+            {rows.map(({ member, doing, reviews, authored, done, lastSeen }) => (
               <tr key={member.username}>
                 <th scope="row" className="font-normal">
                   <span className="flex items-center gap-3">
@@ -119,9 +113,6 @@ export function Team() {
                     </span>
                   </span>
                 </th>
-                <td>
-                  <span className={`c ${room ? "text-go" : "text-warn"}`}>{room ?? "Dans le couloir"}</span>
-                </td>
                 <td>
                   {doing.length > 0 ? (
                     <ul className="list-none space-y-1.5 p-0">
@@ -135,7 +126,7 @@ export function Team() {
                       ))}
                     </ul>
                   ) : (
-                    <span className="text-dim">
+                    <span className="text-warn">
                       rien en cours
                       {free.length > 0 && (
                         <>

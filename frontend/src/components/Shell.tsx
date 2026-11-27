@@ -7,7 +7,7 @@ import { activityVerb, COLUMN_NAMES } from "../lib/voice";
 import { Agent } from "./bits";
 
 const NAV = [
-  { to: "/", label: "Poste", n: "01" },
+  { to: "/", label: "Aujourd'hui", n: "01" },
   { to: "/tableau", label: "Tableau", n: "02" },
   { to: "/equipe", label: "Équipe", n: "03" },
   { to: "/echeances", label: "Échéances", n: "04" },
@@ -103,7 +103,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <span className="x text-[20px]">
               5N<span className="text-go">@</span>E
             </span>
-            <span className="c hidden text-dim lg:inline">Poste de nuit</span>
+            <span className="c hidden text-dim lg:inline">Tableau de bord</span>
           </Link>
 
           <nav aria-label="Navigation principale" className="hidden items-center gap-4 md:flex lg:gap-6">

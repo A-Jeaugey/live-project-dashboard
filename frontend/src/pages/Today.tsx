@@ -1,10 +1,9 @@
 import { Link } from "react-router";
 import { Agent, Domain, IssueLink, OutLink, Pane, Segments, Tag } from "../components/bits";
-import { Plan } from "../components/Plan";
 import { ago, countdown, dayMonth, duration, list, plural, stamp } from "../lib/format";
 import { useLive } from "../lib/live";
 import { useModel } from "../lib/model";
-import type { Activity, Attention, Deadline } from "../lib/types";
+import type { Activity, Attention, Deadline, Snapshot } from "../lib/types";
 import { previousVisit } from "../lib/visit";
 import { activityVerb, alertKey, briefing, EMPTY, FLAG_TEXT } from "../lib/voice";
 
@@ -23,7 +22,6 @@ function Countdown({ next }: { next: Deadline | undefined }) {
   }
 
   const label = countdown(next);
-  const ms = next.milestone;
 
   return (
     <div>
@@ -38,21 +36,6 @@ function Countdown({ next }: { next: Deadline | undefined }) {
       </div>
       <h1 className="x mt-5 text-[clamp(20px,1.9vw,27px)] leading-[0.95] text-fg normal-case">{next.title}</h1>
 
-      <div className="mt-6">
-        <div className="mb-2 flex items-baseline gap-3">
-          <span className="c text-dim">Sortie de secours</span>
-          <span className="leader" aria-hidden="true" />
-          <span className="m text-fg">
-            {ms ? (ms.total > 0 ? `${ms.closed}/${ms.total} verrous ouverts` : "aucune tâche") : "pas de jalon"}
-          </span>
-        </div>
-        {ms ? (
-          <Segments done={ms.closed} doing={ms.doing} total={ms.total} />
-        ) : (
-          <p className="m text-warn">Aucun jalon GitLab pour cette échéance.</p>
-        )}
-      </div>
-
       <p className="mt-6 max-w-[46ch] text-[15.5px] leading-snug text-dim">{briefing(m)}</p>
       <p className="mt-4">
         <Link to={`/echeances?e=${next.key}`} className="c text-[12px]">
@@ -60,6 +43,146 @@ function Countdown({ next }: { next: Deadline | undefined }) {
         </Link>
       </p>
     </div>
+  );
+}
+
+/** Part du temps déjà écoulée entre l'échéance précédente et celle-ci, et les jours correspondants. */
+function elapsedBefore(next: Deadline, deadlines: Snapshot["deadlines"]) {
+  const previous = deadlines
+    .filter((d) => d.target_date < next.target_date)
+    .sort((a, b) => b.target_date.localeCompare(a.target_date))[0];
+  // Sans échéance précédente, on mesure sur trente jours (ou plus s'il en reste davantage).
+  const span = Math.max(1, previous ? next.days_left - previous.days_left : Math.max(next.days_left, 30));
+  const days = Math.min(span, Math.max(0, span - next.days_left));
+  return { days, span, share: days / span };
+}
+
+/**
+ * La seule question qui compte avant une échéance : avance-t-on aussi vite que le temps passe ?
+ * Deux barres de même longueur, l'une sous l'autre, et un verdict.
+ */
+function Race({ next }: { next: Deadline }) {
+  const { snap } = useModel();
+  const time = elapsedBefore(next, snap.deadlines);
+  const ms = next.milestone;
+  const done = ms && ms.total > 0 ? ms.closed / ms.total : null;
+  const gap = done === null ? 0 : Math.round((time.share - done) * 100);
+
+  const verdict =
+    done === null
+      ? { text: ms ? "Aucune tâche dans ce jalon" : "Pas de jalon dans GitLab", color: "var(--warn)" }
+      : gap > 25
+        ? { text: "En retard", color: "var(--alarm)" }
+        : gap > 8
+          ? { text: "Un peu en retard", color: "var(--warn)" }
+          : gap < -8
+            ? { text: "En avance", color: "var(--go)" }
+            : { text: "Dans les temps", color: "var(--go)" };
+
+  return (
+    <section className="brk border border-line2 p-5 md:p-6">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+        <h2 className="c text-fg">Temps contre tâches</h2>
+        <span className="x text-[clamp(18px,2vw,26px)] normal-case" style={{ color: verdict.color }}>
+          {verdict.text}
+        </span>
+      </header>
+
+      <div className="mt-5 grid grid-cols-[64px_minmax(0,1fr)] items-center gap-x-4 gap-y-3 sm:grid-cols-[64px_minmax(0,1fr)_190px]">
+        <span className="c text-dim">Temps</span>
+        <span
+          className="track"
+          role="img"
+          aria-label={`${Math.round(time.share * 100)} % du temps écoulé`}
+          style={{ "--fill": `${time.share * 100}%` } as React.CSSProperties}
+        />
+        <span className="m col-start-2 text-dim sm:col-start-3 sm:text-right">
+          <span className="text-fg">{Math.round(time.share * 100)} %</span> · {time.days} j sur {time.span}
+        </span>
+
+        <span className="c text-dim">Tâches</span>
+        {ms && ms.total > 0 ? (
+          <span className="race-segs">
+            <Segments done={ms.closed} doing={ms.doing} total={ms.total} />
+          </span>
+        ) : (
+          <span className="track" style={{ "--fill": "0%" } as React.CSSProperties} />
+        )}
+        <span className="m col-start-2 text-dim sm:col-start-3 sm:text-right">
+          {ms && ms.total > 0 ? (
+            <>
+              <span className="text-fg">{Math.round((done ?? 0) * 100)} %</span> · {ms.closed} sur {ms.total}
+            </>
+          ) : (
+            "rien à mesurer"
+          )}
+        </span>
+      </div>
+    </section>
+  );
+}
+
+/** Qui fait quoi, en cinq lignes. */
+function Roster() {
+  const m = useModel();
+  const { fresh } = useLive();
+  const { snap } = m;
+  const free = snap.issues.filter((i) => i.column === "todo" && i.assignees.length === 0).length;
+  const idle = snap.members.filter(
+    (mb) => !snap.issues.some((i) => i.column === "doing" && i.assignees.includes(mb.username)),
+  ).length;
+
+  return (
+    <Pane
+      title="Qui fait quoi"
+      meta={idle > 0 ? <span className="text-warn">{String(idle).padStart(2, "0")} sans tâche</span> : "tout le monde est occupé"}
+    >
+      <ul className="rows" style={{ "--gutter": "150px" } as React.CSSProperties}>
+        {snap.members.map((member) => {
+          const doing = snap.issues.filter((i) => i.column === "doing" && i.assignees.includes(member.username));
+          return (
+            <li key={member.username} className={`items-center ${doing.some((i) => fresh.has(i.iid)) ? "fresh" : ""}`}>
+              <span className="k flex items-center gap-3">
+                <Agent username={member.username} size={30} />
+                <span className="x text-[15px] normal-case">{member.first_name}</span>
+              </span>
+              <div className="min-w-0">
+                {doing.length === 0 ? (
+                  <span className="text-warn">
+                    rien en cours
+                    {free > 0 && (
+                      <>
+                        {" · "}
+                        <Link to="/tableau">
+                          {free} {plural(free, "tâche", "tâches")} à prendre
+                        </Link>
+                      </>
+                    )}
+                  </span>
+                ) : (
+                  doing.map((issue) => {
+                    const late = issue.merge_requests.flatMap((iid) => m.mr(iid) ?? []).find((mr) => mr.overdue);
+                    return (
+                      <div key={issue.iid} className="flex flex-wrap items-baseline gap-x-4">
+                        <IssueLink issue={issue} />
+                        {issue.stale_days !== null && (
+                          <span className="m text-warn">{issue.stale_days} J SANS NOUVELLES</span>
+                        )}
+                        {late && (
+                          <span className="m text-alarm">
+                            !{late.iid} ATTEND UNE RELECTURE · {duration(late.waiting_hours ?? 0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </Pane>
   );
 }
 
@@ -204,7 +327,7 @@ function AlertRow({ item }: { item: Attention }) {
           <div className="flex min-w-0 items-start gap-3">
             <Agent username={item.member} size={26} />
             <div className="min-w-0">
-              <span className="font-medium">{m.first(item.member)} est dans le couloir</span>
+              <span className="font-medium">{m.first(item.member)} n'a rien en cours</span>
               <div className="m mt-1 text-faint">
                 {item.available_todo > 0 ? (
                   <Link to="/tableau">
@@ -230,7 +353,7 @@ function AlertRow({ item }: { item: Attention }) {
   }
 }
 
-/** Une ligne de la main courante. */
+/** Une ligne du journal. */
 export function ActivityRow({ item }: { item: Activity }) {
   const m = useModel();
   const target = item.target;
@@ -308,7 +431,7 @@ export function SetupNote() {
           <span className="text-dim">{missing_milestones.join(" · ")}</span>
         </p>
       )}
-      <p className="m mt-3 text-faint">Le poste proposera de les créer en phase 2.</p>
+      <p className="m mt-3 text-faint">L'outil proposera de les créer en phase 2.</p>
     </div>
   );
 }
@@ -326,13 +449,9 @@ export function Today() {
     <div className="space-y-12 py-8 md:py-10">
       <section className="grid items-start gap-x-10 gap-y-10 xl:grid-cols-[minmax(0,350px)_minmax(0,1fr)]">
         <Countdown next={next} />
-        <div className="min-w-0">
-          <div className="brk overflow-x-auto p-1.5">
-            <div className="min-w-[820px]">
-              <Plan next={next} />
-            </div>
-          </div>
-          <p className="m mt-2 text-faint lg:hidden">FAIRE GLISSER POUR VOIR TOUT L'ÉTAGE →</p>
+        <div className="min-w-0 space-y-9">
+          {next && <Race next={next} />}
+          <Roster />
         </div>
       </section>
 
@@ -365,7 +484,7 @@ export function Today() {
           </ul>
         </Pane>
 
-        <Pane n="03" title="Main courante" meta={since === null ? "derniers événements" : `depuis ${ago(since, now)}`}>
+        <Pane n="03" title="Journal" meta={since === null ? "derniers événements" : `depuis ${ago(since, now)}`}>
           <ul className="rows">
             {news.length === 0 ? (
               <li>
@@ -378,7 +497,7 @@ export function Today() {
           </ul>
           <p className="mt-3 text-right">
             <Link to="/projet" className="c text-[12px]">
-              Toute la main courante →
+              Tout le journal →
             </Link>
           </p>
         </Pane>

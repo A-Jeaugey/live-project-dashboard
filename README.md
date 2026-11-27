@@ -7,10 +7,10 @@ EPITA Lyon.
 Les tâches vivent dans GitLab (`arthur.jeaugey/5-nights-at-epita` sur `https://gitlab.cri.epita.fr/`). L'outil
 ne garde jamais sa propre version des tâches : il lit GitLab et, à partir de la phase 2, y écrira.
 
-L'accueil est le **plan de l'étage, de nuit** : une salle par domaine, un repère par tâche, chaque membre posé
-dans la salle de sa tâche, et la prochaine échéance en prof qui remonte le couloir vers la sortie de secours.
+L'accueil répond à trois questions sans cliquer : combien de temps reste-t-il, avance-t-on aussi vite que le
+temps passe, et qui fait quoi.
 
-![Écran d'accueil](docs/apercu/poste.jpg)
+![Écran d'accueil](docs/apercu/aujourdhui.jpg)
 
 Autres captures : [tableau](docs/apercu/tableau.jpg), [détail d'une tâche](docs/apercu/detail.jpg),
 [équipe](docs/apercu/equipe.jpg), [échéances](docs/apercu/echeances.jpg), [téléphone](docs/apercu/telephone.jpg). Les tâches visibles sur ces images sont des **données d'exemple**.

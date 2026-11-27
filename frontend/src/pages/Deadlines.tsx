@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router";
 import { Agent, Domain, IssueLink, PageHead, Pane, Segments, Tag } from "../components/bits";
 import { countdown, dayMonth, longDate, plural } from "../lib/format";
 import { useModel, type Model } from "../lib/model";
-import { roomOf } from "../lib/rooms";
 import type { ColumnKey, Deadline, Issue } from "../lib/types";
 import { COLUMN_NAMES } from "../lib/voice";
 import { SetupNote } from "./Today";
@@ -163,12 +162,11 @@ function Detail({ deadline }: { deadline: Deadline }) {
           </Pane>
 
           {byDomain.length > 0 && (
-            <Pane n="02" title="Par salle">
-              <ul className="rows" style={{ "--gutter": "150px" } as React.CSSProperties}>
+            <Pane n="02" title="Par domaine">
+              <ul className="rows" style={{ "--gutter": "110px" } as React.CSSProperties}>
                 {byDomain.map((d) => (
                   <li key={d.name} className="items-center">
                     <span className="k">
-                      <span className="c block text-fg">{roomOf(d.name)}</span>
                       <Domain name={d.name} />
                     </span>
                     <span className="flex items-center gap-4">
@@ -225,7 +223,7 @@ function Detail({ deadline }: { deadline: Deadline }) {
   );
 }
 
-/** Les échéances du calendrier officiel : cinq nuits à passer. */
+/** Les échéances du calendrier officiel. */
 export function Deadlines() {
   const m = useModel();
   const [params, setParams] = useSearchParams();

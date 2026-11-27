@@ -1,6 +1,6 @@
 # État actuel
 
-Dernière mise à jour : **27 novembre 2026**, après la refonte visuelle « poste de nuit ».
+Dernière mise à jour : **27 novembre 2026**, après le retrait du plan de l'étage.
 
 ## Où on en est
 
@@ -9,9 +9,9 @@ déployée, et la connexion n'a pas encore été essayée avec le vrai GitLab de
 
 Ce qui existe :
 
-- **Interface** : Poste (accueil, avec le plan de l'étage), Tableau, Équipe, Échéances, Projet, détail d'une
-  tâche, écran de connexion. Utilisable sur téléphone. L'apparence en est à sa troisième version : les deux
-  premières ont été rejetées par Arthur comme trop génériques (voir `docs/UX.md` §8).
+- **Interface** : Aujourd'hui (compte à rebours, temps contre tâches, qui fait quoi), Tableau, Équipe,
+  Échéances, Projet, détail d'une tâche, écran de connexion. Utilisable sur téléphone. L'apparence a été refaite
+  plusieurs fois à la demande d'Arthur ; l'historique est dans `docs/UX.md` §8.
 - **Serveur** : lecture de GitLab (issues, labels, jalons, membres, merge requests, pipelines, commits,
   événements), cache en mémoire, interrogation périodique, réception des webhooks, flux temps réel, connexion
   par OpenID Connect réservée aux membres du projet.
@@ -28,7 +28,7 @@ Captures : `docs/apercu/`. Elles montrent des données d'exemple.
 | Style (`make lint`) | propre |
 | Types et compilation de l'interface (`npm run build`) | passent |
 | Parcours dans un vrai navigateur, contre le faux GitLab : page de connexion, choix d'un membre, retour à la page demandée, tableau, détail avec description et commentaires, déconnexion | passe |
-| Mise à jour en direct : une tâche prise dans le faux GitLab change de colonne à l'écran sans recharger ; sur le plan, le jeton de la personne change de salle ; message « en direct : Louis a pris #12 » | passe, en moins d'une seconde avec webhook |
+| Mise à jour en direct : une tâche prise dans le faux GitLab change de colonne à l'écran sans recharger ; sur l'accueil, la ligne de la personne se met à jour ; message « en direct : Louis a pris #12 » | passe, en moins d'une seconde avec webhook |
 | Refus d'un compte qui n'est pas membre du projet | passe |
 | Webhook sans secret ou avec un mauvais secret ; requête de modification venue d'un autre site | refusés (403) |
 | Webhook reçu en double | ignoré (vérifié par les tests) |
@@ -52,7 +52,7 @@ Captures : `docs/apercu/`. Elles montrent des données d'exemple.
 ## Constats
 
 1. **Le projet GitLab du jeu est toujours vide** (un commit, aucun label, aucun jalon, aucune issue). L'accueil
-   affichera donc « Étage désert » et la liste de ce qu'il manque. Les labels et les jalons sont à créer à la main
+   affichera donc « Aucune tâche dans GitLab pour l'instant » et la liste de ce qu'il manque. Les labels et les jalons sont à créer à la main
    dans GitLab, ou attendront la phase 2, où l'outil proposera de le faire.
 2. **Prendre une tâche ne laisse aucune trace dans le journal d'événements de GitLab.** Le fil d'activité ne
    montre donc que les ouvertures, fermetures, commentaires, merge requests et poussées. Le changement de colonne
@@ -63,14 +63,14 @@ Captures : `docs/apercu/`. Elles montrent des données d'exemple.
 
 Validées par Arthur le 27 novembre : React + TypeScript, connexion par le GitLab de l'école avec écritures par le
 robot du projet, tunnel Cloudflare, les quatre ajouts proposés. Le reste de la proposition est appliqué par
-défaut. **En attente d'un avis** : la direction visuelle « poste de nuit » (D-019) et la numérotation des
-échéances en « nuits » (D-018). La direction « le carnet » (D-017) est abandonnée. Les quatre autres membres ne
-se sont pas encore exprimés. Détail : `docs/DECISIONS.md`.
+défaut. **En attente d'un avis** : le système graphique actuel (D-019) et la numérotation des échéances en
+« nuits » (D-018). Abandonnés : la direction « le carnet » (D-017) et le plan de l'étage en accueil (D-020). Les
+quatre autres membres ne se sont pas encore exprimés. Détail : `docs/DECISIONS.md`.
 
 ## À faire par un membre
 
 - [ ] Regarder les captures de `docs/apercu/` ou lancer l'outil en local (README), et dire si l'apparence
-      « poste de nuit » convient.
+      convient.
 - [ ] **Révoquer le token GitLab « Claude code »** créé le 27 novembre avec toutes les portées, et en créer un en
       `read_api` (rôle Reporter) pour le serveur.
 - [ ] Créer l'application OAuth, le tunnel Cloudflare et le `.env`, puis déployer (README, « Installer sur le

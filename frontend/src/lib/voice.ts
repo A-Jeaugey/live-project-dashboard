@@ -1,4 +1,4 @@
-// La voix du poste de nuit : des consignes courtes, comme sur une main courante.
+// Les textes calculés de l'interface : des phrases courtes, qui disent ce qui presse.
 // Tout est calculé à partir de l'instantané, sans aucune IA.
 
 import { duration, list, plural } from "./format";
@@ -12,11 +12,11 @@ export const COLUMN_NAMES: Record<ColumnKey, string> = {
   done: "Fait",
 };
 
-/** La consigne de la nuit : une à trois phrases, les plus urgentes d'abord. */
+/** Le résumé en tête d'accueil : une à trois phrases, les plus urgentes d'abord. */
 export function briefing(m: Model): string {
   const { snap } = m;
   if (snap.issues.length === 0) {
-    return "Étage désert. Aucune tâche dans GitLab pour l'instant.";
+    return "Aucune tâche dans GitLab pour l'instant. Tout reste à créer.";
   }
 
   const remarks: string[] = [];
@@ -47,7 +47,7 @@ export function briefing(m: Model): string {
     remarks.push(`${list(idle)} ${idle.length > 1 ? "n'ont" : "n'a"} rien en cours.`);
   }
 
-  if (remarks.length === 0) return "Rien à signaler. La nuit est calme.";
+  if (remarks.length === 0) return "Rien à signaler.";
   return remarks.slice(0, 3).join(" ");
 }
 

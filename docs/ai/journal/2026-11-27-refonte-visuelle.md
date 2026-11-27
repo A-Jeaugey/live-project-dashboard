@@ -32,19 +32,29 @@ d'original, pas générique.
 - Types et compilation de l'interface.
 - Parcours complet rejoué dans un navigateur contre le faux GitLab : connexion, tableau, mise à jour en direct,
   détail, déconnexion.
-- Sur le plan : quand une tâche est prise dans le faux GitLab, le jeton de la personne quitte le couloir pour la
-  salle de la tâche, sans recharger.
 - Rendu relu sur captures, ordinateur et téléphone.
-- Projet vide (données d'exemple vides) : les cinq membres attendent dans le couloir, la sortie est sans verrou,
-  la note de mise en place liste les labels et jalons manquants.
 
 ## Limites
 
 - Les photos de profil ne sont plus affichées : les membres sont des jetons à initiale.
-- Sur téléphone, le plan se fait défiler horizontalement.
 - Le thème clair a disparu : la direction est nocturne par nature.
 - Arthur n'a vu que l'accueil au moment où le reste a été réécrit : la direction n'est pas encore validée.
 
+## Suite de la session : retrait du plan
+
+Arthur a vu le plan de l'étage et l'a jugé « weird et inutile ». Il avait raison : il fallait un mode d'emploi
+pour le lire, il occupait la moitié de l'accueil, et tout ce qu'il montrait était dit plus clairement juste en
+dessous.
+
+- Le plan, les noms de salles et le vocabulaire associé (couloir, verrous, poste, main courante) sont retirés.
+- À leur place sur l'accueil : **temps contre tâches** (deux barres alignées et un verdict) et **qui fait quoi**
+  (une ligne par membre).
+- L'entrée de menu « Poste » redevient « Aujourd'hui », « Main courante » redevient « Journal ».
+- Le système graphique (noir, traits fins, typographie) est conservé : Arthur ne l'a pas critiqué.
+
+Revérifié ensuite : types, compilation, parcours complet dans un navigateur, rendu sur ordinateur, tablette et
+téléphone.
+
 ## Suite
 
-Avis d'Arthur sur la direction. Si elle convient : déploiement, puis phase 2.
+Avis d'Arthur sur l'ensemble. Si cela convient : déploiement, puis phase 2.
