@@ -1,0 +1,26 @@
+# Secrets : jamais dans Git (voir .env.example quand il existera)
+.env
+.env.*
+!.env.example
+
+# Données locales (SQLite, volumes Docker)
+data/
+*.sqlite3
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Frontend
+node_modules/
+dist/
+
+# Divers
+.DS_Store
+*.log
