@@ -43,7 +43,7 @@ function Signed({ me }: { me: Me }) {
       />
     );
   }
-  return <Splash title="Mise sous tension…" />;
+  return <Splash title="Chargement…" />;
 }
 
 export function App() {
@@ -61,5 +61,5 @@ export function App() {
       />
     );
   }
-  return <Splash title="Mise sous tension…" />;
+  return <Splash title="Chargement…" />;
 }

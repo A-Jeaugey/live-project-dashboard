@@ -96,7 +96,7 @@ export function activityVerb(a: Activity): string {
     case "commented":
       return "a commenté";
     case "pushed":
-      return a.detail ? `a poussé ${a.detail} sur` : "a poussé sur";
+      return a.detail ? `a poussé ${a.detail.replace(/ sur .*$/, "")} sur` : "a poussé sur";
     case "joined":
       return "a rejoint le projet";
     case "other":

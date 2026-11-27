@@ -1,6 +1,6 @@
 # État actuel
 
-Dernière mise à jour : **27 novembre 2026**, après le retrait du plan de l'étage.
+Dernière mise à jour : **27 novembre 2026**, après la refonte en tuiles.
 
 ## Où on en est
 
@@ -9,9 +9,9 @@ déployée, et la connexion n'a pas encore été essayée avec le vrai GitLab de
 
 Ce qui existe :
 
-- **Interface** : Aujourd'hui (compte à rebours, temps contre tâches, qui fait quoi), Tableau, Équipe,
-  Échéances, Projet, détail d'une tâche, écran de connexion. Utilisable sur téléphone. L'apparence a été refaite
-  plusieurs fois à la demande d'Arthur ; l'historique est dans `docs/UX.md` §8.
+- **Interface** : Aujourd'hui (tuile de l'échéance avec anneaux temps / tâches, équipe, à toi, à surveiller,
+  à venir, activité), Tableau, Équipe (une tuile par membre), Échéances, Projet, détail d'une tâche, écran de
+  connexion. Utilisable sur téléphone. Apparence choisie par Arthur parmi trois maquettes (`docs/UX.md` §8).
 - **Serveur** : lecture de GitLab (issues, labels, jalons, membres, merge requests, pipelines, commits,
   événements), cache en mémoire, interrogation périodique, réception des webhooks, flux temps réel, connexion
   par OpenID Connect réservée aux membres du projet.
@@ -63,14 +63,13 @@ Captures : `docs/apercu/`. Elles montrent des données d'exemple.
 
 Validées par Arthur le 27 novembre : React + TypeScript, connexion par le GitLab de l'école avec écritures par le
 robot du projet, tunnel Cloudflare, les quatre ajouts proposés. Le reste de la proposition est appliqué par
-défaut. **En attente d'un avis** : le système graphique actuel (D-019) et la numérotation des échéances en
-« nuits » (D-018). Abandonnés : la direction « le carnet » (D-017) et le plan de l'étage en accueil (D-020). Les
-quatre autres membres ne se sont pas encore exprimés. Détail : `docs/DECISIONS.md`.
+défaut. Apparence : interface en tuiles sur fond graphite, choisie par Arthur (D-021). **En attente d'un avis** :
+la numérotation des échéances en « nuits » (D-018). Les quatre autres membres ne se sont pas encore exprimés.
+Détail : `docs/DECISIONS.md`.
 
 ## À faire par un membre
 
-- [ ] Regarder les captures de `docs/apercu/` ou lancer l'outil en local (README), et dire si l'apparence
-      convient.
+- [ ] Montrer les captures de `docs/apercu/` aux autres membres, ou lancer l'outil en local (README).
 - [ ] **Révoquer le token GitLab « Claude code »** créé le 27 novembre avec toutes les portées, et en créer un en
       `read_api` (rôle Reporter) pour le serveur.
 - [ ] Créer l'application OAuth, le tunnel Cloudflare et le `.env`, puis déployer (README, « Installer sur le

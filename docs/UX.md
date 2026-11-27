@@ -1,7 +1,7 @@
 # Expérience utilisateur
 
 > Statut : parcours et écrans **validés par Arthur le 27 novembre 2026**, ajouts compris.
-> L'apparence a été refaite plusieurs fois à sa demande ; l'état actuel est décrit en section 8 et attend son avis.
+> L'apparence a été refaite plusieurs fois ; la direction actuelle, choisie par Arthur, est décrite en section 8.
 > Les éléments marqués *(ajout proposé)* ne figuraient pas dans le cahier des charges ; ils ont été acceptés.
 
 ## 1. Idées directrices
@@ -119,20 +119,22 @@ La référence est l'application elle-même, lancée avec des données d'exemple
 
 ### 4.1 Aujourd'hui
 
-- À gauche : `J-N` en très gros, le nom de l'échéance, « semaine du … » et un **résumé** d'une à trois phrases
-  calculées, sans IA, qui disent ce qui presse.
-- **Temps contre tâches** : deux barres de même longueur, l'une sous l'autre. La première montre la part du
-  temps déjà écoulée depuis l'échéance précédente, la seconde les tâches du jalon (une case par tâche : rendue,
-  en cours, restante). Un verdict s'affiche : « en avance », « dans les temps », « un peu en retard » ou
-  « en retard », selon l'écart entre les deux.
-- **Qui fait quoi** : une ligne par membre, avec sa ou ses tâches en cours, ou « rien en cours » ; une tâche qui
-  dort ou une relecture en retard est signalée sur la ligne.
-- **01 À toi** : ses tâches en cours, les relectures qu'on attend de soi, ses merge requests en attente.
-- **02 Alertes** : relectures en retard, tâches qui dorment, membres sans tâche, tâches à trier. « RAS » si la
-  liste est vide.
-- **03 Journal** : ce qui s'est passé depuis la dernière visite (date gardée dans le navigateur).
-- **04 Version jouable**, selon la règle configurée (voir 4.5), et la note de mise en place s'il manque des labels
-  ou des jalons dans GitLab.
+L'accueil est une grille de tuiles (« widgets ») :
+
+- **Tuile de l'échéance** (la plus grande, presque noire) : nom de l'échéance, « semaine du … », pastille de
+  verdict, et deux **anneaux** concentriques : l'extérieur montre la part du temps écoulée depuis l'échéance
+  précédente, l'intérieur les tâches rendues du jalon (les tâches en cours en plus clair). À côté, le nombre de
+  jours restants en très gros. En bas, un résumé d'une à trois phrases calculées, sans IA.
+  Verdict selon l'écart entre temps et tâches : « en avance », « dans les temps », « un peu en retard » (plus de
+  8 points), « en retard » (plus de 25 points).
+- **Équipe** : une ligne par membre avec sa tâche en cours ou « rien en cours », et une pastille d'état
+  (en cours, en relecture, relecture en retard, jours sans activité, tâches libres).
+- **À toi** : ses tâches en cours, les relectures qu'on attend de soi, ses merge requests en attente.
+- **À surveiller** : relectures en retard, tâches qui dorment, membres sans tâche, tâches à trier.
+- **À venir** : les trois échéances suivantes en petites tuiles, avec leur compte à rebours et un mini-anneau
+  d'avancement.
+- **Activité** : les derniers événements depuis la dernière visite, une ligne chacun.
+- **Version jouable**, et une tuile **Mise en place** s'il manque des labels ou des jalons dans GitLab.
 
 ### 4.2 Tableau
 
@@ -278,36 +280,38 @@ Chaque déplacement est **une seule** requête GitLab sur l'issue.
 
 **Je prends** équivaut à « vers En cours » avec assignation à soi.
 
-## 8. Apparence
+## 8. Apparence : des tuiles sur fond graphite
 
-Sobre, nocturne, et sans métaphore à déchiffrer : chaque écran dit directement ce qu'il a à dire.
+Choisie par Arthur le 27 novembre 2026 parmi trois maquettes (« produit sombre », « clair épuré », « tuiles »),
+avec une consigne : les tuiles, mais pas sur fond blanc.
 
-- **Fond noir, traits fins** ; pas de cartes arrondies ni d'ombres.
-- **Trois couleurs qui veulent dire quelque chose** : le vert pour ce qui avance et ce qui est cliquable, l'ambre
-  pour ce qui traîne, le rouge pour ce qui presse.
-- **Une seule famille de caractères, Archivo, à ses deux extrêmes** : très large et grasse pour les titres et les
-  gros chiffres (« J-10 », le nom de chaque écran), très étroite pour les libellés. JetBrains Mono pour tout ce qui
-  se compte ou s'horodate.
-- **Panneaux numérotés** (« 01 À TOI ······· 02 »), pointillés de conduite, coins en équerre, bande de
-  signalisation au-dessus des alertes.
-- **Les mêmes signes partout** : rond pour une idée, carré vide pour une tâche à faire, carré plein pour une
-  tâche en cours, coche pour une tâche faite.
-- **Les membres sont des jetons à initiale**, chacun à sa couleur. Pas de photo : celles de l'école ne se
-  chargent pas hors de son réseau.
-- **Mouvement utile seulement** : horloge, voyant de synchronisation, clignotement de ce qui vient de changer, et
-  un message « en direct » quand quelque chose se passe dans GitLab.
+- **Fond graphite, tuiles un ton au-dessus**, coins très arrondis (22 px), sans bordure ni ombre. Ni blanc
+  éclatant, ni noir pur.
+- **Une tuile vedette presque noire** pour l'échéance, avec ses anneaux temps / tâches.
+- **Des widgets plutôt que des listes nues** : anneaux, mini-anneaux, petites tuiles de dates, compteurs, pastilles
+  d'état arrondies.
+- **Couleurs porteuses de sens seulement** : citron pour ce qui avance vers l'échéance, bleu pour « en cours »,
+  vert pour « fait », ambre pour ce qui traîne, rouge pour ce qui presse.
+- **Navigation en pastilles** (contrôle segmenté) en haut de l'écran ; sur téléphone, elle passe sous le logo et
+  défile horizontalement.
+- **Typographie** : Geist pour le texte et les grands chiffres, Geist Mono pour ce qui se compte ou s'horodate.
+  Les polices sont servies par l'application elle-même.
+- **Membres** : pastilles rondes pastel à l'initiale, une teinte stable par personne. Pas de photo : celles de
+  l'école ne se chargent pas hors de son réseau.
+- **Mouvement utile seulement** : voyant de synchronisation, liseré qui s'allume sur ce qui vient de changer, et un
+  message « en direct » quand quelque chose se passe dans GitLab.
 
-Les polices sont servies par l'application elle-même. Contraste suffisant partout, zones tactiles d'au moins
-44 px sur téléphone, aucune information portée par la couleur seule, animations coupées si le système le demande.
+Contraste suffisant, zones tactiles d'au moins 32 px pour les filtres et 40 px pour les boutons, aucune
+information portée par la couleur seule, animations coupées si le système le demande.
 
 ### Ce qui a été essayé puis abandonné
 
 1. Maquette initiale, sombre à cartes arrondies : rejetée, trop générique.
 2. « Le carnet » (copie d'élève annotée au stylo rouge, papier crème) : construite puis rejetée, même reproche.
-3. Le **plan de l'étage** en accueil (une salle par domaine, les membres posés dans les salles, l'échéance en
-   prof qui remonte le couloir) : construit, puis retiré. Verdict d'Arthur : bizarre et inutile. Il demandait un
-   mode d'emploi, occupait la moitié de l'écran, et ne disait rien que les listes ne disent mieux. Les deux
-   informations qu'il portait sont maintenant données directement : « temps contre tâches » et « qui fait quoi ».
+3. Le **plan de l'étage** en accueil : construit puis retiré, jugé bizarre et inutile.
+4. Le style **« terminal »** (noir, vert fluo, libellés en capitales espacées, sections numérotées, bandes de
+   chantier) : rejeté, jugé ni moderne ni original. C'est en effet un style que les générateurs d'interface
+   produisent en série.
 
-Références regardées : recherches ciblées sur Behance et le site de Linear. Awwwards refuse les navigateurs
-automatisés et n'a pu être consulté que par la recherche.
+Leçon retenue : montrer plusieurs directions en images et laisser choisir, plutôt que d'en construire une seule
+à l'aveugle.

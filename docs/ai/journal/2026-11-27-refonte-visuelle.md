@@ -55,6 +55,25 @@ dessous.
 Revérifié ensuite : types, compilation, parcours complet dans un navigateur, rendu sur ordinateur, tablette et
 téléphone.
 
+## Suite de la session : choix entre trois maquettes
+
+Arthur a trouvé le style « terminal » encore « AI slop » et pas moderne. Diagnostic : libellés en capitales
+espacées, sections numérotées, pointillés, coins en équerre, bandes de chantier, vert fluo sur noir sont
+exactement les tics des interfaces générées ; et ce style est volontairement rétro.
+
+Plutôt qu'une cinquième direction construite à l'aveugle :
+
+1. Trois maquettes statiques de l'accueil, mêmes données, rendues en images : A « produit sombre » (barre
+   latérale, listes denses), B « clair épuré » (blanc, gros chiffres, une couleur vive), C « tuiles » (fond gris,
+   cartes blanches, anneaux temps / tâches).
+2. Arthur a choisi C, « un peu plus sombre, pas forcément foncé mais juste pas blanc », en saluant les widgets.
+3. Toute l'interface a été refaite dans ce style, sur fond graphite : accueil, tableau, détail d'une tâche, équipe
+   (une tuile par membre), échéances, projet, connexion. Police Geist à la place d'Archivo et JetBrains Mono.
+4. Les calculs « temps écoulé » et « verdict » ont été sortis dans `frontend/src/lib/progress.ts`.
+
+Revérifié : 187 tests, lint, types, compilation, parcours complet dans un navigateur contre le faux GitLab, rendu
+sur ordinateur, tablette, téléphone et avec un projet vide.
+
 ## Suite
 
-Avis d'Arthur sur l'ensemble. Si cela convient : déploiement, puis phase 2.
+Déploiement, puis phase 2.

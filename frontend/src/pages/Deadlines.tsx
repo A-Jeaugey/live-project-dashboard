@@ -1,14 +1,15 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router";
-import { Agent, Domain, IssueLink, PageHead, Pane, Segments, Tag } from "../components/bits";
+import { ColumnGlyph } from "../components/cards";
+import { Agent, Bar, Domain, IssueLink, MiniRing, PageHead, Pill, Rings, Tile } from "../components/bits";
 import { countdown, dayMonth, longDate, plural } from "../lib/format";
 import { useModel, type Model } from "../lib/model";
+import { elapsedBefore, verdict } from "../lib/progress";
 import type { ColumnKey, Deadline, Issue } from "../lib/types";
 import { COLUMN_NAMES } from "../lib/voice";
 import { SetupNote } from "./Today";
 
 const REMAINING_ORDER: ColumnKey[] = ["doing", "todo", "idea"];
-const two = (n: number) => String(n).padStart(2, "0");
 
 /** Le bilan d'une échéance en Markdown, prêt à coller dans le rapport, les diapositives ou Discord. */
 function report(m: Model, d: Deadline, issues: Issue[]): string {
@@ -25,9 +26,7 @@ function report(m: Model, d: Deadline, issues: Issue[]): string {
     .filter((x) => x.all.length > 0);
   if (domains.length > 0) {
     lines.push("### Par domaine");
-    for (const { name, all } of domains) {
-      lines.push(`- ${name} : ${all.filter((i) => i.column === "done").length} sur ${all.length}`);
-    }
+    for (const { name, all } of domains) lines.push(`- ${name} : ${all.filter((i) => i.column === "done").length} sur ${all.length}`);
     lines.push("");
   }
   lines.push("### Par personne");
@@ -60,15 +59,13 @@ function Detail({ deadline }: { deadline: Deadline }) {
   const byDomain = snap.domains
     .map((d) => {
       const all = issues.filter((i) => i.domains.includes(d.name));
-      return {
-        name: d.name,
-        total: all.length,
-        done: all.filter((i) => i.column === "done").length,
-        doing: all.filter((i) => i.column === "doing").length,
-      };
+      return { name: d.name, total: all.length, done: all.filter((i) => i.column === "done").length, doing: all.filter((i) => i.column === "doing").length };
     })
     .filter((d) => d.total > 0);
   const ms = deadline.milestone;
+  const time = elapsedBefore(deadline, snap.deadlines);
+  const done = ms && ms.total > 0 ? ms.closed / ms.total : null;
+  const v = verdict(time.share, done, ms !== null);
 
   const copy = async () => {
     try {
@@ -81,142 +78,122 @@ function Detail({ deadline }: { deadline: Deadline }) {
   };
 
   return (
-    <div className="space-y-10">
-      <header>
-        <div className="m text-go">
-          {deadline.night !== null ? `NUIT ${two(deadline.night)} · ` : ""}
-          SEMAINE DU {longDate(deadline.week_of).replace(/^\S+ /, "").toUpperCase()}
-        </div>
-        <h2 className="x mt-3 text-[clamp(26px,3.4vw,44px)] leading-[0.95] normal-case">{deadline.title}</h2>
-        {ms ? (
-          <>
-            <div className="mt-6">
-              <div className="mb-2 flex items-baseline gap-3">
-                <span className="c text-dim">Avancement</span>
-                <span className="leader" aria-hidden="true" />
-                <span className="m text-fg">
-                  {ms.total === 0 ? "aucune tâche" : `${ms.closed} rendues · ${ms.doing} en cours · ${ms.todo} à faire`}
+    <div className="bento">
+      <Tile hero className="col-span-12">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-6">
+          {!deadline.past && (
+            <Rings
+              time={time.share}
+              done={done ?? 0}
+              doing={ms && ms.total > 0 ? ms.doing / ms.total : 0}
+              size={140}
+              label={`${Math.round(time.share * 100)} % du temps écoulé`}
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="text-[13px] text-muted">
+              {deadline.night !== null && `Nuit ${deadline.night} · `}semaine du {longDate(deadline.week_of).replace(/^\S+ /, "")}
+            </div>
+            <h2 className="title mt-1.5 text-[28px]">{deadline.title}</h2>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {deadline.past ? <Pill>Passée</Pill> : <Pill color={v.color}>{v.text}</Pill>}
+              {ms && ms.total > 0 && (
+                <span className="text-[13px] text-muted">
+                  {ms.closed} rendues · {ms.doing} en cours · {ms.todo} à faire
                 </span>
+              )}
+            </div>
+            {ms && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                <button type="button" className="btn" onClick={() => void copy()}>
+                  {copied ? "Copié ✓" : "Copier le bilan"}
+                </button>
+                <a href={ms.web_url} target="_blank" rel="noreferrer" className="btn btn-ghost">
+                  Jalon dans GitLab ↗
+                </a>
               </div>
-              <Segments done={ms.closed} doing={ms.doing} total={ms.total} />
-            </div>
-            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <button type="button" className="btn" onClick={() => void copy()}>
-                {copied ? "Copié ✓" : "Copier le bilan"}
-              </button>
-              <a href={ms.web_url} target="_blank" rel="noreferrer" className="c text-[12px]">
-                Jalon dans GitLab ↗
-              </a>
-            </div>
-          </>
-        ) : (
-          <p className="mt-5 text-dim">
-            {deadline.past
-              ? "Échéance passée, sans jalon dans GitLab."
-              : "Aucun jalon GitLab ne correspond encore à cette échéance : les tâches ne peuvent pas y être rattachées."}
+            )}
+          </div>
+          {!deadline.past && <div className="big hidden text-[64px] sm:block">{countdown(deadline)}</div>}
+        </div>
+        {!ms && (
+          <p className="mt-5 text-muted">
+            {deadline.past ? "Échéance passée, sans jalon dans GitLab." : "Aucun jalon GitLab ne correspond encore à cette échéance : les tâches ne peuvent pas y être rattachées."}
           </p>
         )}
-      </header>
+      </Tile>
 
       {!ms && !deadline.past && <SetupNote />}
 
       {ms && (
         <>
-          <Pane n="01" title="Ce qu'il reste" meta={`${two(remaining.length)} ${plural(remaining.length, "tâche", "tâches")}`}>
-            <ul className="rows" style={{ "--gutter": "86px" } as React.CSSProperties}>
+          <Tile title="Ce qu'il reste" meta={`${remaining.length} ${plural(remaining.length, "tâche", "tâches")}`} className="col-span-12 lg:col-span-7">
+            <ul className="rows">
               {remaining.length === 0 ? (
-                <li>
-                  <span className="k m text-go">RAS</span>
-                  <span className="text-dim">
-                    {ms.total === 0 ? "Rien n'est encore rattaché à ce jalon." : "Plus rien. Tout est rendu."}
-                  </span>
-                </li>
+                <li className="text-muted">{ms.total === 0 ? "Rien n'est encore rattaché à ce jalon." : "Plus rien. Tout est rendu."}</li>
               ) : (
                 remaining.map((issue) => (
                   <li key={issue.iid}>
-                    <span className="k">
-                      <Tag color={issue.column === "doing" ? "var(--go)" : "var(--dim)"}>{COLUMN_NAMES[issue.column]}</Tag>
+                    <ColumnGlyph column={issue.column} />
+                    <span className="ellipsis flex-1">
+                      <IssueLink issue={issue} />
                     </span>
-                    <div className="flex min-w-0 items-start gap-3">
-                      <div className="min-w-0 flex-1">
-                        <IssueLink issue={issue} />
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3">
-                          {issue.domains.map((d) => (
-                            <Domain key={d} name={d} />
-                          ))}
-                          {issue.stale_days !== null && (
-                            <span className="m text-warn">{issue.stale_days} j sans nouvelles</span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="flex -space-x-1.5">
-                        {issue.assignees.map((username) => (
-                          <Agent key={username} username={username} size={26} />
-                        ))}
-                      </span>
-                    </div>
+                    {issue.stale_days !== null && <Pill color="var(--amber)">{issue.stale_days} j</Pill>}
+                    <span className="flex -space-x-1.5">
+                      {issue.assignees.map((username) => (
+                        <Agent key={username} username={username} size={24} />
+                      ))}
+                    </span>
                   </li>
                 ))
               )}
             </ul>
-          </Pane>
+          </Tile>
 
-          {byDomain.length > 0 && (
-            <Pane n="02" title="Par domaine">
-              <ul className="rows" style={{ "--gutter": "110px" } as React.CSSProperties}>
+          <Tile title="Par domaine" className="col-span-12 md:col-span-6 lg:col-span-5">
+            {byDomain.length === 0 ? (
+              <p className="text-muted">Aucune tâche classée par domaine.</p>
+            ) : (
+              <ul className="rows">
                 {byDomain.map((d) => (
-                  <li key={d.name} className="items-center">
-                    <span className="k">
+                  <li key={d.name}>
+                    <span className="w-[96px] flex-none">
                       <Domain name={d.name} />
                     </span>
-                    <span className="flex items-center gap-4">
-                      <span className="flex-1">
-                        <Segments done={d.done} doing={d.doing} total={d.total} />
-                      </span>
-                      <span className={`m ${d.done === 0 ? "text-warn" : "text-dim"}`}>
-                        {d.done}/{d.total}
-                      </span>
+                    <span className="flex-1">
+                      <Bar done={d.done} doing={d.doing} total={d.total} color={m.domainColor(d.name)} />
+                    </span>
+                    <span className={`mono w-10 text-right ${d.done === 0 ? "text-amber" : "text-muted"}`}>
+                      {d.done}/{d.total}
                     </span>
                   </li>
                 ))}
               </ul>
-            </Pane>
-          )}
+            )}
+          </Tile>
 
-          <Pane n={byDomain.length > 0 ? "03" : "02"} title="Qui a rendu quoi">
-            <table className="grid-table border-t border-line2">
-              <thead>
-                <tr>
-                  <th scope="col" className="c pt-3">
-                    Membre
-                  </th>
-                  <th scope="col" className="c w-[100px] pt-3">
-                    Rendues
-                  </th>
-                  <th scope="col" className="c w-[100px] pt-3">
-                    En cours
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {snap.members.map((member) => {
-                  const mine = issues.filter((i) => i.assignees.includes(member.username));
-                  return (
-                    <tr key={member.username}>
-                      <th scope="row" className="font-normal">
-                        <span className="flex items-center gap-3">
-                          <Agent username={member.username} size={26} />
-                          {member.first_name}
-                        </span>
-                      </th>
-                      <td className="m text-[13px]">{two(mine.filter((i) => i.column === "done").length)}</td>
-                      <td className="m text-[13px]">{two(mine.filter((i) => i.column === "doing").length)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </Pane>
+          <Tile title="Qui a rendu quoi" className="col-span-12">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              {snap.members.map((member) => {
+                const mine = issues.filter((i) => i.assignees.includes(member.username));
+                const mineDone = mine.filter((i) => i.column === "done").length;
+                const mineDoing = mine.filter((i) => i.column === "doing").length;
+                return (
+                  <div key={member.username} className="chiptile flex items-center gap-3">
+                    <Agent username={member.username} size={34} />
+                    <div className="min-w-0">
+                      <div className="font-semibold">{member.first_name}</div>
+                      <div className="text-[12.5px] leading-snug text-muted">
+                        <span className="text-fg">{mineDone}</span> rendue{mineDone > 1 ? "s" : ""}
+                        <br />
+                        {mineDoing} en cours
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Tile>
         </>
       )}
     </div>
@@ -250,70 +227,51 @@ export function Deadlines() {
   };
 
   return (
-    <div className="space-y-10 py-8 md:py-10">
-      <PageHead title="Échéances" kicker="04 · LE CALENDRIER OFFICIEL">
-        {two(left)} À VENIR
+    <div className="space-y-5">
+      <PageHead title="Échéances">
+        <span>
+          {left} {plural(left, "échéance à venir", "échéances à venir")}
+        </span>
       </PageHead>
 
-      <div className="grid gap-x-14 gap-y-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
-        <ol className="list-none self-start border-t border-line2 p-0">
+      <div className="grid items-start gap-3.5 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+        <div className="grid gap-2">
           {all.map((d) => {
-            const isNext = d.key === next?.key;
             const isSelected = d.key === selected?.key;
+            const isNext = d.key === next?.key;
             return (
-              <li key={d.key} className={`border-b border-line ${isSelected ? "brk bg-raised" : ""}`}>
-                <button
-                  type="button"
-                  aria-pressed={isSelected}
-                  onClick={() => select(d.key)}
-                  className="grid w-full grid-cols-[58px_minmax(0,1fr)_auto] items-center gap-4 border-0 bg-transparent px-3 py-5 text-left"
-                >
-                  <span className={`x text-[38px] ${d.past ? "text-faint" : isNext ? "text-alarm" : "text-fg"}`}>
-                    {d.night !== null ? two(d.night) : "00"}
-                  </span>
-                  <span className="min-w-0">
-                    <span className={`x block text-[19px] leading-[1] normal-case ${d.past ? "text-faint line-through" : ""}`}>
-                      {d.title}
+              <button
+                key={d.key}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => select(d.key)}
+                className={`tile flex items-center gap-4 border-0 px-4 py-3.5 text-left transition-colors ${
+                  isSelected ? "bg-tile3" : "hover:bg-tile2"
+                } ${d.past ? "opacity-60" : ""}`}
+              >
+                <div className="w-[74px] flex-none">
+                  <div className={`big text-[24px] tracking-[-0.04em] ${isNext ? "text-lime" : ""}`}>{d.past ? "✓" : countdown(d)}</div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="ellipsis font-semibold">{d.title}</div>
+                  <div className="mt-0.5 text-[12.5px] text-muted">semaine du {dayMonth(d.week_of)}</div>
+                </div>
+                {d.milestone && d.milestone.total > 0 ? (
+                  <span className="flex items-center gap-2">
+                    <span className="mono text-[11.5px] text-muted">
+                      {d.milestone.closed}/{d.milestone.total}
                     </span>
-                    <span className="m mt-2 block text-faint">
-                      SEMAINE DU {dayMonth(d.week_of).toUpperCase()}
-                      {d.night === null && " · AVANT LA PREMIÈRE NUIT"}
-                    </span>
-                    <span className="mt-3 flex items-center gap-3">
-                      {d.milestone ? (
-                        d.milestone.total > 0 ? (
-                          <>
-                            <span className="w-44 max-w-full">
-                              <Segments done={d.milestone.closed} doing={d.milestone.doing} total={d.milestone.total} />
-                            </span>
-                            <span className="m text-dim">
-                              {d.milestone.closed}/{d.milestone.total}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="m text-faint">JALON CRÉÉ, ENCORE VIDE</span>
-                        )
-                      ) : d.past ? null : (
-                        <span className="m text-warn">JALON À CRÉER DANS GITLAB</span>
-                      )}
-                    </span>
+                    <MiniRing done={d.milestone.closed} total={d.milestone.total} size={26} />
                   </span>
-                  <span className="pr-1 text-right">
-                    {d.past ? (
-                      <Tag color="var(--faint)">passée</Tag>
-                    ) : (
-                      <span className={`x text-[24px] whitespace-nowrap ${isNext ? "text-alarm" : "text-dim"}`}>
-                        {countdown(d)}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              </li>
+                ) : !d.past && !d.milestone ? (
+                  <span className="dot" title="Jalon à créer dans GitLab" style={{ "--c": "var(--amber)" } as CSSProperties} />
+                ) : null}
+              </button>
             );
           })}
-        </ol>
+        </div>
 
-        <div ref={detail} className="scroll-mt-20">
+        <div ref={detail} className="scroll-mt-4">
           {selected && <Detail key={selected.key} deadline={selected} />}
         </div>
       </div>

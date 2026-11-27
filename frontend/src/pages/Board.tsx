@@ -1,21 +1,14 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "react-router";
 import { Agent, Domain, PageHead } from "../components/bits";
-import { IssueCard } from "../components/cards";
+import { ColumnGlyph, IssueCard } from "../components/cards";
+import { plural } from "../lib/format";
 import { useModel } from "../lib/model";
 import type { ColumnKey, Issue } from "../lib/types";
 import { COLUMN_NAMES } from "../lib/voice";
 
 const ORDER: ColumnKey[] = ["idea", "todo", "doing", "done"];
 const FAR = Number.MAX_SAFE_INTEGER;
-
-/** Les mêmes signes que sur le plan de l'étage. */
-const GLYPH: Record<ColumnKey, ReactNode> = {
-  idea: <span className="inline-block h-[11px] w-[11px] rounded-full border-[1.5px] border-dim" />,
-  todo: <span className="inline-block h-[11px] w-[11px] border-[1.5px] border-fg" />,
-  doing: <span className="inline-block h-[11px] w-[11px] bg-go" />,
-  done: <span className="text-go">✓</span>,
-};
 
 export function Board() {
   const m = useModel();
@@ -71,17 +64,18 @@ export function Board() {
   const free = open.filter((i) => i.column === "todo" && i.assignees.length === 0).length;
 
   return (
-    <div className="space-y-8 py-8 md:py-10">
-      <PageHead title="Tableau" kicker="02 · TOUTES LES TÂCHES, LUES DANS GITLAB">
-        {String(open.length).padStart(2, "0")} OUVERTES · <span className="text-go">{String(free).padStart(2, "0")} À PRENDRE</span>
+    <div className="space-y-5">
+      <PageHead title="Tableau">
+        <span>
+          {open.length} {plural(open.length, "tâche ouverte", "tâches ouvertes")} · <span className="text-lime">{free} à prendre</span>
+        </span>
       </PageHead>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <div className="flex flex-wrap items-center gap-2">
         <button type="button" className="chip" aria-pressed={who === me.username} onClick={() => toggle("qui", me.username)}>
-          MES TÂCHES <kbd>M</kbd>
+          Mes tâches <kbd>M</kbd>
         </button>
-
-        <div role="group" aria-label="Filtrer par personne" className="flex items-center gap-1">
+        <div role="group" aria-label="Filtrer par personne" className="flex items-center gap-1 rounded-full bg-tile px-1.5 py-1">
           {snap.members.map((member) => (
             <button
               key={member.username}
@@ -92,88 +86,73 @@ export function Board() {
               data-dimmed={who !== null && who !== member.username}
               onClick={() => toggle("qui", member.username)}
             >
-              <Agent username={member.username} size={30} />
+              <Agent username={member.username} size={24} />
             </button>
           ))}
         </div>
-
-        <div role="group" aria-label="Filtrer par domaine" className="flex flex-wrap gap-1.5">
-          {snap.domains.map((d) => (
-            <button
-              key={d.name}
-              type="button"
-              className="chip"
-              aria-pressed={domain === d.name}
-              onClick={() => toggle("dom", d.name)}
-            >
-              <Domain name={d.name} />
-            </button>
-          ))}
-        </div>
-
-        <select
-          className="select"
-          aria-label="Filtrer par échéance"
-          value={deadline ?? ""}
-          onChange={(event) => toggle("ech", event.target.value)}
-        >
-          <option value="">TOUTES LES ÉCHÉANCES</option>
+        {snap.domains.map((d) => (
+          <button key={d.name} type="button" className="chip" aria-pressed={domain === d.name} onClick={() => toggle("dom", d.name)}>
+            <Domain name={d.name} />
+          </button>
+        ))}
+        <select className="select" aria-label="Filtrer par échéance" value={deadline ?? ""} onChange={(event) => toggle("ech", event.target.value)}>
+          <option value="">Toutes les échéances</option>
           {m.nights.map((d) => (
             <option key={d.key} value={d.key}>
-              NUIT {d.night} · {d.short_title}
+              {d.short_title}
             </option>
           ))}
         </select>
-
         {filtered && (
-          <button type="button" className="quiet" onClick={() => setParams({}, { replace: true, preventScrollReset: true })}>
-            tout afficher ×
+          <button type="button" className="quiet ml-1" onClick={() => setParams({}, { replace: true, preventScrollReset: true })}>
+            Tout afficher ×
           </button>
         )}
       </div>
 
       {/* Téléphone : une colonne à la fois. */}
-      <div role="tablist" aria-label="Colonnes" className="grid grid-cols-4 border border-line2 md:hidden">
+      <div role="tablist" aria-label="Colonnes" className="seg md:hidden">
         {columns.map(({ key, issues }) => (
-          <button
+          <a
             key={key}
-            type="button"
             role="tab"
+            href={`?col=${key}`}
             aria-selected={shown === key}
-            onClick={() => toggle("col", key === "todo" ? null : key)}
-            className={`min-h-[52px] border-0 ${shown === key ? "bg-go text-bg" : "bg-transparent text-dim"}`}
+            aria-current={shown === key ? "page" : undefined}
+            onClick={(event) => {
+              event.preventDefault();
+              toggle("col", key === "todo" ? null : key);
+            }}
           >
-            <span className="c block text-[12px]">{COLUMN_NAMES[key]}</span>
-            <span className="m block">{String(issues.length).padStart(2, "0")}</span>
-          </button>
+            {COLUMN_NAMES[key]} <span className="mono ml-1.5 opacity-60">{issues.length}</span>
+          </a>
         ))}
       </div>
 
-      <div className="grid gap-x-6 gap-y-10 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid items-start gap-3.5 md:grid-cols-2 xl:grid-cols-4">
         {columns.map(({ key, issues }) => (
-          <section key={key} aria-label={COLUMN_NAMES[key]} className={shown === key ? "" : "hidden md:block"}>
-            <header className="pane-h hidden border-b border-line2 md:flex">
-              <span className="self-center leading-none">{GLYPH[key]}</span>
-              <h2 className="c text-fg">{COLUMN_NAMES[key]}</h2>
-              <span className="leader" aria-hidden="true" />
-              <span className="m text-faint">
-                {String(issues.length).padStart(2, "0")}
-                {key === "done" && ` · ${snap.settings.done_window_days} J`}
+          <section key={key} aria-label={COLUMN_NAMES[key]} className={`tile p-3.5 ${shown === key ? "" : "hidden md:block"}`}>
+            <header className="flex items-center gap-2.5 px-1.5 pt-1 pb-3">
+              <ColumnGlyph column={key} />
+              <h2 className="text-[14px] font-semibold">{COLUMN_NAMES[key]}</h2>
+              <span className="mono ml-auto text-faint">
+                {issues.length}
+                {key === "done" && ` · ${snap.settings.done_window_days} j`}
               </span>
             </header>
-            <div className="space-y-2.5 md:pt-3">
+            <div className="space-y-2">
               {issues.map((issue) => (
                 <IssueCard key={issue.iid} issue={issue} />
               ))}
               {issues.length === 0 && (
-                <p className="m py-4 text-faint">
+                <p className="px-1.5 py-3 text-[13px] text-faint">
                   {filtered
-                    ? "RIEN AVEC CES FILTRES"
+                    ? "Rien avec ces filtres."
                     : key === "done"
-                      ? `RIEN DE FINI DEPUIS ${snap.settings.done_window_days} J`
+                      ? `Rien de fini depuis ${snap.settings.done_window_days} jours.`
                       : key === "doing"
-                        ? "PERSONNE N'A RIEN PRIS"
-                        : "VIDE"}
+                        ? "Personne n'a rien pris."
+                        : "Vide."}
                 </p>
               )}
             </div>

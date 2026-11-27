@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 function Cover({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-dvh place-items-center p-5">
-      <main className="brk w-full max-w-[620px] border border-line2 bg-panel p-8 md:p-12">{children}</main>
+    <div className="grid min-h-dvh place-items-center p-4">
+      <main className="tile w-full max-w-[520px] p-8 md:p-10">{children}</main>
     </div>
   );
 }
@@ -28,24 +28,18 @@ export function Login() {
   const reason = new URLSearchParams(window.location.search).get("erreur");
   return (
     <Cover>
-      <div className="m text-go">TABLEAU DE BORD · ACCÈS RÉSERVÉ AU GROUPE</div>
-      <h1 className="x mt-5 text-[clamp(44px,9vw,84px)]">
-        5 Nights
-        <br />
-        at EPITA
-      </h1>
-      <p className="mt-6 max-w-[44ch] text-dim">
-        Le tableau des tâches, l'équipe et les échéances du projet, lus en direct dans GitLab.
-      </p>
+      <span className="grid h-11 w-11 place-items-center rounded-[14px] bg-lime text-[20px] font-bold text-[#141517]">5</span>
+      <h1 className="title mt-6 text-[34px]">5 Nights at EPITA</h1>
+      <p className="mt-2 text-muted">Les tâches, l'équipe et les échéances du projet, lues en direct dans GitLab.</p>
       {reason && (
-        <div role="alert" className="mt-7">
-          <div className="hazard" style={{ "--hc": "var(--alarm)" } as React.CSSProperties} aria-hidden="true" />
-          <p className="mt-3 text-alarm">{REFUSALS[reason] ?? REFUSALS.connexion}</p>
-        </div>
+        <p role="alert" className="mt-6 rounded-2xl bg-red/15 px-4 py-3 text-[13.5px] text-red">
+          {REFUSALS[reason] ?? REFUSALS.connexion}
+        </p>
       )}
-      <a className="btn mt-9" href={loginUrl()}>
+      <a className="btn mt-8 w-full" href={loginUrl()}>
         Se connecter avec le GitLab de l'école
       </a>
+      <p className="mt-4 text-center text-[12.5px] text-faint">Réservé aux membres du projet.</p>
     </Cover>
   );
 }
@@ -53,10 +47,10 @@ export function Login() {
 export function Splash({ title, note, onRetry }: { title: string; note?: string; onRetry?: () => void }) {
   return (
     <Cover>
-      <h1 className="x text-[clamp(30px,5vw,48px)]">{title}</h1>
-      {note && <p className="mt-5 text-dim">{note}</p>}
+      <h1 className="title text-[26px]">{title}</h1>
+      {note && <p className="mt-3 text-muted">{note}</p>}
       {onRetry && (
-        <button type="button" className="btn mt-8" onClick={onRetry}>
+        <button type="button" className="btn mt-7" onClick={onRetry}>
           Réessayer
         </button>
       )}

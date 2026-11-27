@@ -8,7 +8,7 @@ Les tâches vivent dans GitLab (`arthur.jeaugey/5-nights-at-epita` sur `https://
 ne garde jamais sa propre version des tâches : il lit GitLab et, à partir de la phase 2, y écrira.
 
 L'accueil répond à trois questions sans cliquer : combien de temps reste-t-il, avance-t-on aussi vite que le
-temps passe, et qui fait quoi.
+temps passe (deux anneaux : temps écoulé et tâches rendues), et qui fait quoi.
 
 ![Écran d'accueil](docs/apercu/aujourdhui.jpg)
 

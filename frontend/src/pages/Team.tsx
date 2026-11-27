@@ -1,18 +1,30 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router";
-import { Agent, IssueLink, OutLink, PageHead, Pane } from "../components/bits";
+import { Agent, IssueLink, OutLink, PageHead, Pill, Tile } from "../components/bits";
 import { ago, countdown, duration, plural } from "../lib/format";
 import { useModel } from "../lib/model";
 
-/** L'équipe : qui fait quoi, qui n'a rien, qui doit relire. */
+function Stat({ value, label, color }: { value: number; label: string; color?: string }) {
+  return (
+    <div className="chiptile flex-1">
+      <div className="big text-[26px] tracking-[-0.04em]" style={{ color: value > 0 ? color : undefined }}>
+        {value}
+      </div>
+      <div className="mt-1 text-[12px] text-muted">{label}</div>
+    </div>
+  );
+}
+
+/** L'équipe : une tuile par membre, puis ce qui dort et ce qui attend quelqu'un. */
 export function Team() {
   const m = useModel();
   const { snap, now } = m;
+
   const rows = snap.members.map((member) => {
     const mine = (usernames: string[]) => usernames.includes(member.username);
-    const doing = snap.issues.filter((i) => i.column === "doing" && mine(i.assignees));
     return {
       member,
-      doing,
+      doing: snap.issues.filter((i) => i.column === "doing" && mine(i.assignees)),
       reviews: snap.merge_requests.filter((mr) => mr.waiting_review && mine(mr.reviewers) && !mine(mr.approved_by)),
       authored: snap.merge_requests.filter((mr) => mr.author === member.username),
       done: snap.issues.filter((i) => m.isRecentlyDone(i) && mine(i.assignees)).length,
@@ -21,209 +33,118 @@ export function Team() {
   });
 
   const busy = rows.filter((r) => r.doing.length > 0).length;
-  const idle = rows.length - busy;
-  const asleep = snap.issues
-    .filter((i) => i.stale_days !== null)
-    .sort((a, b) => (b.stale_days ?? 0) - (a.stale_days ?? 0));
+  const asleep = snap.issues.filter((i) => i.stale_days !== null).sort((a, b) => (b.stale_days ?? 0) - (a.stale_days ?? 0));
   const free = snap.issues.filter((i) => i.column === "todo" && i.assignees.length === 0);
 
   return (
-    <div className="space-y-10 py-8 md:py-10">
-      <PageHead title="Équipe" kicker="03 · QUI FAIT QUOI">
-        {String(busy).padStart(2, "0")} SUR UNE TÂCHE
-        {idle > 0 && (
-          <>
-            {" · "}
-            <span className="text-warn">{String(idle).padStart(2, "0")} SANS TÂCHE</span>
-          </>
-        )}
+    <div className="space-y-5">
+      <PageHead title="Équipe">
+        <span>
+          {busy} sur {rows.length} ont une tâche
+          {rows.length - busy > 0 && <span className="text-amber"> · {rows.length - busy} sans tâche</span>}
+        </span>
       </PageHead>
 
-      {/* Téléphone : une fiche par membre. */}
-      <ul className="list-none space-y-3 p-0 md:hidden">
-        {rows.map(({ member, doing, reviews, done, lastSeen }) => (
-          <li key={member.username} className="border border-line2 p-4">
+      <div className="bento">
+        {rows.map(({ member, doing, reviews, authored, done, lastSeen }) => (
+          <Tile key={member.username} className="col-span-12 flex flex-col md:col-span-6 xl:col-span-4">
             <div className="flex items-center gap-3">
-              <Agent username={member.username} size={40} />
+              <Agent username={member.username} size={44} />
               <div className="min-w-0 flex-1">
-                <div className="x text-[17px] normal-case">{member.first_name}</div>
-                <div className={`c mt-1 text-[12px] ${doing.length > 0 ? "text-go" : "text-warn"}`}>
-                  {doing.length > 0 ? `${doing.length} en cours` : "Sans tâche"}
-                </div>
+                <div className="text-[17px] font-semibold tracking-[-0.02em]">{member.first_name}</div>
+                <div className="mono text-faint">{member.username}</div>
               </div>
-              <div className="m text-right text-faint">
-                {done} rendu
-                <br />
-                {lastSeen ? ago(lastSeen, now) : "—"}
-              </div>
+              {doing.length > 0 ? <Pill color="var(--blue)">Sur une tâche</Pill> : <Pill color="var(--amber)">Sans tâche</Pill>}
             </div>
-            <ul className="mt-3 list-none space-y-2 border-t border-line p-0 pt-3">
+
+            <div className="mt-4 flex gap-2">
+              <Stat value={doing.length} label="en cours" color="var(--blue)" />
+              <Stat value={done} label={`rendues · ${snap.settings.done_window_days} j`} color="var(--green)" />
+              <Stat value={reviews.length} label="à relire" color="var(--red)" />
+            </div>
+
+            <ul className="rows top mt-3 flex-1">
               {doing.map((issue) => (
                 <li key={issue.iid}>
-                  <IssueLink issue={issue} />
-                  {issue.stale_days !== null && <span className="m block text-warn">{issue.stale_days} j sans nouvelles</span>}
+                  <div className="min-w-0">
+                    <IssueLink issue={issue} />
+                    {issue.stale_days !== null && <div className="mt-0.5 text-[12.5px] text-amber">{issue.stale_days} jours sans activité</div>}
+                  </div>
                 </li>
               ))}
-              {doing.length === 0 && <li className="text-dim">rien en cours</li>}
+              {doing.length === 0 && (
+                <li className="text-muted">
+                  Rien en cours
+                  {free.length > 0 && (
+                    <>
+                      {"\u00a0·\u00a0"}
+                      <Link to="/tableau" className="text-fg hover:text-lime">
+                        {free.length} {plural(free.length, "tâche", "tâches")} à prendre
+                      </Link>
+                    </>
+                  )}
+                </li>
+              )}
               {reviews.map((mr) => (
-                <li key={mr.iid}>
-                  <span className={`m ${mr.overdue ? "text-alarm" : "text-faint"}`}>
-                    À RELIRE · {duration(mr.waiting_hours ?? 0)} ·{" "}
-                  </span>
-                  <OutLink href={mr.web_url} refText={`!${mr.iid}`} className="font-normal">
-                    de {m.first(mr.author)}
-                  </OutLink>
+                <li key={`r${mr.iid}`}>
+                  <span className="dot mt-1.5" style={{ "--c": mr.overdue ? "var(--red)" : "var(--muted)" } as CSSProperties} />
+                  <div className="min-w-0">
+                    <OutLink href={mr.web_url} refText={`!${mr.iid}`}>
+                      relire la merge request de {m.first(mr.author)}
+                    </OutLink>
+                    <div className={`mt-0.5 text-[12.5px] ${mr.overdue ? "text-red" : "text-muted"}`}>attend depuis {duration(mr.waiting_hours ?? 0)}</div>
+                  </div>
+                </li>
+              ))}
+              {authored.map((mr) => (
+                <li key={`a${mr.iid}`} className="text-[13px] text-muted">
+                  <span className="ref">!{mr.iid}</span>
+                  {mr.draft ? "brouillon" : mr.waiting_review ? "en relecture" : "approuvée"}
                 </li>
               ))}
             </ul>
-          </li>
+
+            <div className="mt-3 text-[12.5px] text-faint">{lastSeen ? `Dernière activité ${ago(lastSeen, now)}` : "Pas d'activité récente"}</div>
+          </Tile>
         ))}
-      </ul>
 
-      <div className="hidden md:block">
-        <table className="grid-table">
-          <thead>
-            <tr>
-              <th scope="col" className="c w-[210px]">
-                Membre
-              </th>
-              <th scope="col" className="c">
-                En cours
-              </th>
-              <th scope="col" className="c w-[210px]">
-                À relire
-              </th>
-              <th scope="col" className="c w-[110px] whitespace-nowrap">
-                Rendu · {snap.settings.done_window_days} j
-              </th>
-              <th scope="col" className="c w-[110px]">
-                Vu
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(({ member, doing, reviews, authored, done, lastSeen }) => (
-              <tr key={member.username}>
-                <th scope="row" className="font-normal">
-                  <span className="flex items-center gap-3">
-                    <Agent username={member.username} size={36} />
-                    <span>
-                      <span className="x block text-[16px] normal-case">{member.first_name}</span>
-                      <span className="m mt-1 block text-faint">{member.username}</span>
-                    </span>
-                  </span>
-                </th>
-                <td>
-                  {doing.length > 0 ? (
-                    <ul className="list-none space-y-1.5 p-0">
-                      {doing.map((issue) => (
-                        <li key={issue.iid}>
-                          <IssueLink issue={issue} />
-                          {issue.stale_days !== null && (
-                            <span className="m ml-3 text-warn">{issue.stale_days} J SANS NOUVELLES</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <span className="text-warn">
-                      rien en cours
-                      {free.length > 0 && (
-                        <>
-                          {" · "}
-                          <Link to="/tableau">
-                            {free.length} {plural(free.length, "tâche", "tâches")} à prendre
-                          </Link>
-                        </>
-                      )}
-                    </span>
-                  )}
-                  {authored.length > 0 && (
-                    <div className="m mt-2 text-faint">
-                      {authored.map((mr) => (
-                        <span key={mr.iid} className="mr-4">
-                          !{mr.iid} {mr.draft ? "brouillon" : mr.waiting_review ? "en relecture" : "approuvée"}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </td>
-                <td>
-                  {reviews.length > 0 ? (
-                    <ul className="list-none space-y-1.5 p-0">
-                      {reviews.map((mr) => (
-                        <li key={mr.iid}>
-                          <OutLink href={mr.web_url} refText={`!${mr.iid}`} className="font-normal">
-                            de {m.first(mr.author)}
-                          </OutLink>
-                          <span className={`m ml-2 ${mr.overdue ? "text-alarm" : "text-faint"}`}>
-                            {duration(mr.waiting_hours ?? 0)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <span className="text-faint">—</span>
-                  )}
-                </td>
-                <td className="m text-[13px] text-fg">{String(done).padStart(2, "0")}</td>
-                <td className="m text-dim">{lastSeen ? ago(lastSeen, now) : "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
-        <Pane n="01" title="Tâches qui dorment" meta={`sans activité depuis ${snap.settings.stale_days} j ou plus`}>
-          {asleep.length > 0 && <div className="hazard" aria-hidden="true" />}
-          <ul className="rows">
+        <Tile title="Tâches qui dorment" meta={`${snap.settings.stale_days} j ou plus sans activité`} className="col-span-12 md:col-span-6 xl:col-span-4">
+          <ul className="rows top">
             {asleep.length === 0 ? (
-              <li>
-                <span className="k m text-go">RAS</span>
-                <span className="text-dim">Tout ce qui est en cours bouge.</span>
-              </li>
+              <li className="text-muted">Tout ce qui est en cours bouge.</li>
             ) : (
               asleep.map((issue) => (
                 <li key={issue.iid}>
-                  <span className="k x text-[19px] leading-none text-warn">{issue.stale_days} j</span>
+                  <span className="big w-[52px] flex-none text-[22px] text-amber">{issue.stale_days} j</span>
                   <div className="min-w-0">
                     <IssueLink issue={issue} />
-                    <div className="m mt-1 text-faint">chez {issue.assignees.map(m.first).join(", ") || "personne"}</div>
+                    <div className="mt-0.5 text-[12.5px] text-muted">chez {issue.assignees.map(m.first).join(", ") || "personne"}</div>
                   </div>
                 </li>
               ))
             )}
           </ul>
-        </Pane>
+        </Tile>
 
-        <Pane n="02" title="À prendre" meta={`${String(free.length).padStart(2, "0")} sans personne`}>
+        <Tile title="À prendre" meta={`${free.length} sans personne`} className="col-span-12 md:col-span-6 xl:col-span-8">
           <ul className="rows">
             {free.length === 0 ? (
-              <li>
-                <span className="k m text-faint">—</span>
-                <span className="text-dim">Tout ce qui est décidé a quelqu'un.</span>
-              </li>
+              <li className="text-muted">Tout ce qui est décidé a quelqu'un.</li>
             ) : (
               free.slice(0, 6).map((issue) => {
                 const deadline = m.deadline(issue.milestone?.deadline_key);
                 return (
                   <li key={issue.iid}>
-                    <span className="k m text-faint">{deadline ? countdown(deadline) : "—"}</span>
-                    <IssueLink issue={issue} />
+                    <span className="ellipsis flex-1">
+                      <IssueLink issue={issue} />
+                    </span>
+                    {deadline && <span className="mono text-faint">{countdown(deadline)}</span>}
                   </li>
                 );
               })
             )}
           </ul>
-          {free.length > 6 && (
-            <p className="mt-3 text-right">
-              <Link to="/tableau" className="c text-[12px]">
-                Les {free.length} au tableau →
-              </Link>
-            </p>
-          )}
-        </Pane>
+        </Tile>
       </div>
     </div>
   );

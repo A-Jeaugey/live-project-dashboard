@@ -1,45 +1,49 @@
 @import "tailwindcss";
 
 /*
- * Direction : sobre et nocturne, lisible d'un coup d'œil.
- * - fond noir, traits fins, pas de cartes arrondies ni d'ombres ;
- * - vert : ce qui avance et ce qui est cliquable ; ambre : ce qui traîne ; rouge : ce qui presse ;
- * - une seule famille de caractères, Archivo, poussée à ses deux extrêmes :
- *   très large et grasse pour les gros titres, très étroite pour les libellés ;
- * - JetBrains Mono pour tout ce qui se compte ou s'horodate.
+ * Direction : des tuiles (« widgets ») sur un fond graphite.
+ * - pas de blanc éclatant ni de noir pur : des gris chauds, des tuiles arrondies un ton au-dessus du fond ;
+ * - une tuile vedette presque noire pour l'échéance, avec ses anneaux temps / tâches ;
+ * - couleurs porteuses de sens seulement : bleu = en cours, vert = fait, ambre = traîne, rouge = presse,
+ *   citron = ce qui avance pour l'échéance ;
+ * - Geist pour le texte, Geist Mono pour ce qui se compte.
  */
 
 @theme inline {
   --color-bg: var(--bg);
-  --color-panel: var(--panel);
-  --color-raised: var(--raised);
+  --color-tile: var(--tile);
+  --color-tile2: var(--tile-2);
+  --color-tile3: var(--tile-3);
+  --color-hero: var(--hero);
   --color-line: var(--line);
-  --color-line2: var(--line-2);
   --color-fg: var(--fg);
-  --color-dim: var(--dim);
+  --color-muted: var(--muted);
   --color-faint: var(--faint);
-  --color-go: var(--go);
-  --color-warn: var(--warn);
-  --color-alarm: var(--alarm);
-  --font-sans: "Archivo Variable", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", monospace;
+  --color-lime: var(--lime);
+  --color-blue: var(--blue);
+  --color-green: var(--green);
+  --color-amber: var(--amber);
+  --color-red: var(--red);
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SF Mono", monospace;
 }
 
 :root {
   color-scheme: dark;
-  --bg: #050706;
-  --panel: #0a0e0c;
-  --raised: #101613;
-  --line: #1a2420;
-  --line-2: #2b3a33;
-  --fg: #e9f2ec;
-  --dim: #a3b6ab;
-  --faint: #71877c;
-  --go: #3df59a;
-  --go-dim: #1f7a50;
-  --go-ghost: rgba(61, 245, 154, 0.07);
-  --warn: #ffb224;
-  --alarm: #ff4a3a;
+  --bg: #1f2023;
+  --tile: #2a2b2f;
+  --tile-2: #333439;
+  --tile-3: #3d3e44;
+  --hero: #141517;
+  --line: rgba(255, 255, 255, 0.07);
+  --fg: #f1f1f2;
+  --muted: #a6a7ae;
+  --faint: #8a8b93;
+  --lime: #c6f432;
+  --blue: #7c9bff;
+  --green: #45d98f;
+  --amber: #f5ad3c;
+  --red: #ff6a5f;
 }
 
 @layer base {
@@ -53,45 +57,25 @@
     background: var(--bg);
     color: var(--fg);
     font-family: var(--font-sans);
-    font-size: 14.5px;
-    font-stretch: 100%;
+    font-size: 14px;
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
-  /* Quadrillage discret du fond, comme une table lumineuse. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image:
-      linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
-    background-size: 56px 56px;
-    opacity: 0.45;
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 0%, transparent 100%);
-  }
-
   ::selection {
-    background: var(--go);
-    color: var(--bg);
+    background: var(--lime);
+    color: #141517;
   }
 
   :focus-visible {
-    outline: 2px solid var(--go);
+    outline: 2px solid var(--lime);
     outline-offset: 2px;
   }
 
   a {
-    color: var(--go);
+    color: var(--fg);
     text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
   }
 
   button {
@@ -102,257 +86,231 @@
 }
 
 @layer components {
-  /* ───────────── Typographie ───────────── */
-
-  /* Très large, très gras : les gros titres et les gros chiffres. */
-  .x {
-    font-stretch: 125%;
-    font-weight: 850;
-    line-height: 0.86;
-    letter-spacing: -0.035em;
-    text-transform: uppercase;
-  }
-
-  /* Très étroit : les libellés. */
-  .c {
-    font-stretch: 62%;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.11em;
-    line-height: 1.2;
-    text-transform: uppercase;
-  }
-
-  .m {
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-  }
-
   .wrap {
-    width: min(1480px, 100%);
+    width: min(1320px, 100%);
     margin-inline: auto;
-    padding-inline: clamp(16px, 2.6vw, 40px);
+    padding-inline: clamp(14px, 2.4vw, 32px);
   }
 
-  /* ───────────── Barre du poste ───────────── */
-
-  .sysbar {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    border-bottom: 1px solid var(--line-2);
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter: blur(10px);
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
   }
 
-  .nav-item {
+  /* ───────────── Barre du haut ───────────── */
+
+  .seg {
     display: flex;
-    align-items: baseline;
-    gap: 7px;
-    padding: 15px 2px 13px;
-    border-bottom: 2px solid transparent;
-    color: var(--dim);
+    gap: 2px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--tile);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .seg a {
+    display: flex;
+    flex: none;
+    align-items: center;
+    height: 34px;
+    padding: 0 15px;
+    border-radius: 999px;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 13.5px;
+    white-space: nowrap;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .seg a:hover {
+    color: var(--fg);
+  }
+
+  .seg a[aria-current="page"] {
+    background: var(--fg);
+    color: #141517;
+  }
+
+  .capsule {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 13px;
+    border-radius: 999px;
+    background: var(--tile);
+    color: var(--muted);
+    font-size: 13px;
     white-space: nowrap;
   }
 
-  .nav-item:hover {
-    color: var(--fg);
-    text-decoration: none;
-  }
-
-  .nav-item[aria-current="page"] {
-    border-bottom-color: var(--go);
-    color: var(--fg);
-  }
-
-  .nav-item[aria-current="page"] .m {
-    color: var(--go);
-  }
-
-  .bottom-nav {
-    position: fixed;
-    inset: auto 0 0 0;
-    z-index: 20;
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    padding-bottom: env(safe-area-inset-bottom);
-    border-top: 1px solid var(--line-2);
-    background: var(--panel);
-  }
-
-  .bottom-nav a {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    min-height: 56px;
-    border-top: 2px solid transparent;
-    color: var(--dim);
-  }
-
-  .bottom-nav a:hover {
-    text-decoration: none;
-  }
-
-  .bottom-nav a[aria-current="page"] {
-    border-top-color: var(--go);
-    color: var(--fg);
-  }
-
-  .bottom-nav a[aria-current="page"] .m {
-    color: var(--go);
-  }
-
-  /* Voyant d'état. */
   .led {
-    display: inline-block;
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--c, var(--go));
-    box-shadow: 0 0 8px var(--c, var(--go));
+    background: var(--c, var(--green));
   }
 
   .led[data-live="true"] {
-    animation: breathe 2.4s ease-in-out infinite;
+    box-shadow: 0 0 0 0 var(--c, var(--green));
+    animation: led 2.4s ease-out infinite;
   }
 
-  /* ───────────── Panneaux ───────────── */
+  @keyframes led {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--c, var(--green)) 60%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 7px transparent;
+    }
+  }
 
-  .pane-h {
+  /* ───────────── Tuiles ───────────── */
+
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .tile {
+    min-width: 0;
+    padding: 20px 22px;
+    border-radius: 22px;
+    background: var(--tile);
+  }
+
+  .tile-hero {
+    background: var(--hero);
+  }
+
+  .tile-h {
     display: flex;
     align-items: baseline;
-    gap: 10px;
-    padding-bottom: 10px;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
   }
 
-  .pane-h .n {
-    color: var(--go);
+  .tile-h h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
   }
 
-  /* Pointillés de conduite entre le titre et sa valeur. */
-  .leader {
-    flex: 1;
-    min-width: 12px;
-    height: 0.62em;
-    border-bottom: 1px dotted var(--line-2);
+  .tile-h .meta {
+    color: var(--faint);
+    font-size: 12.5px;
   }
 
+  .big {
+    font-weight: 600;
+    letter-spacing: -0.055em;
+    line-height: 0.84;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .title {
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.04;
+    text-wrap: balance;
+  }
+
+  /* Lignes de liste à l'intérieur d'une tuile. */
   .rows {
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid var(--line-2);
   }
 
   .rows > li {
-    position: relative;
-    display: grid;
-    grid-template-columns: var(--gutter, 74px) minmax(0, 1fr);
-    column-gap: 14px;
-    align-items: start;
-    padding: 11px 0;
-    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    padding: 8px 0;
   }
 
-  .rows > li > .k {
-    padding-top: 2px;
+  .rows > li + li {
+    border-top: 1px solid var(--line);
   }
 
-  /* Coins en équerre autour d'un bloc. */
-  .brk {
-    position: relative;
+  .rows.top > li {
+    align-items: flex-start;
   }
 
-  .brk::before,
-  .brk::after {
-    content: "";
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border: 1.5px solid var(--bc, var(--go));
-    pointer-events: none;
+  /* Petite tuile dans la tuile. */
+  .chiptile {
+    border-radius: 14px;
+    background: var(--tile-2);
+    padding: 12px 13px;
   }
 
-  .brk::before {
-    top: -1px;
-    left: -1px;
-    border-right: 0;
-    border-bottom: 0;
-  }
+  /* ───────────── Pastilles ───────────── */
 
-  .brk::after {
-    right: -1px;
-    bottom: -1px;
-    border-left: 0;
-    border-top: 0;
-  }
-
-  /* Bande de signalisation. */
-  .hazard {
-    height: 7px;
-    background: repeating-linear-gradient(-45deg, var(--hc, var(--warn)) 0 7px, transparent 7px 14px);
-  }
-
-  .tag {
+  .pill {
     display: inline-flex;
+    flex: none;
     align-items: center;
     gap: 6px;
-    padding: 2px 7px;
-    border: 1px solid currentColor;
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    letter-spacing: 0.08em;
-    line-height: 1.4;
-    text-transform: uppercase;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--pc, var(--muted)) 16%, transparent);
+    color: var(--pc, var(--muted));
+    font-size: 12px;
+    font-weight: 550;
     white-space: nowrap;
   }
 
-  .tag[data-solid="true"] {
-    border-color: var(--tc, var(--go));
-    background: var(--tc, var(--go));
-    color: var(--bg);
-    font-weight: 700;
+  .pill[data-solid="true"] {
+    background: var(--pc);
+    color: #141517;
   }
 
-  /* Domaine : un carré de couleur, toujours suivi de son nom. */
+  .dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c, var(--muted));
+  }
+
   .domain {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: var(--dim);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.03em;
+    color: var(--muted);
+    font-size: 12.5px;
     white-space: nowrap;
   }
 
-  .domain > i {
-    width: 8px;
-    height: 8px;
-    background: var(--c);
-  }
-
-  /* Jeton d'un membre. */
-  .agent {
+  .av {
     --s: 28px;
     flex: none;
     display: inline-grid;
     place-items: center;
     width: var(--s);
     height: var(--s);
-    overflow: hidden;
-    border: 1.5px solid var(--ac, var(--fg));
     border-radius: 50%;
-    background: var(--bg);
-    color: var(--ac, var(--fg));
-    font-stretch: 62%;
-    font-weight: 700;
-    font-size: calc(var(--s) * 0.5);
+    background: var(--ac, var(--tile-3));
+    color: #18181b;
+    font-weight: 650;
+    font-size: calc(var(--s) * 0.43);
     line-height: 1;
+  }
+
+  .ref {
+    flex: none;
+    color: var(--faint);
+    font-family: var(--font-mono);
+    font-size: 12px;
   }
 
   .title-link {
@@ -365,113 +323,97 @@
   }
 
   .title-link:hover {
-    color: var(--go);
-    text-decoration: none;
+    color: var(--lime);
   }
 
   .title-link .ref {
-    margin-right: 0.55em;
-    color: var(--faint);
-    font-family: var(--font-mono);
-    font-size: 0.82em;
-    font-weight: 400;
+    margin-right: 0.5em;
   }
 
-  /* Barre de segments : avancement d'un jalon, une case par tâche. */
-  .segs {
-    display: flex;
-    gap: 3px;
+  .ellipsis {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .seg {
-    flex: 1;
-    min-width: 5px;
-    max-width: 30px;
-    height: 12px;
-    border: 1px solid var(--line-2);
-  }
+  /* ───────────── Barres et anneaux ───────────── */
 
-  .seg[data-state="done"] {
-    border-color: var(--go);
-    background: var(--go);
-  }
-
-  .seg[data-state="doing"] {
-    border-color: var(--go);
-    background: repeating-linear-gradient(-45deg, var(--go) 0 2px, transparent 2px 5px);
-  }
-
-  /* Barre continue, graduée tous les dixièmes. */
-  .track {
+  .bar {
     position: relative;
-    display: block;
-    height: 14px;
-    border: 1px solid var(--line-2);
-    background:
-      linear-gradient(var(--fg), var(--fg)) left / var(--fill, 0%) 100% no-repeat,
-      repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), var(--line-2) calc(10% - 1px) 10%);
+    height: 8px;
+    border-radius: 999px;
+    background: var(--tile-3);
+    overflow: hidden;
   }
 
-  /* Dans la comparaison, les segments occupent toute la largeur pour se lire contre la barre du temps. */
-  .race-segs .segs {
-    width: 100%;
+  .bar > i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: 999px;
   }
 
-  .race-segs .seg {
-    max-width: none;
-    height: 14px;
+  .ring-track {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
   }
+
+  .ring-arc {
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  /* ───────────── Contrôles ───────────── */
 
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    min-height: 44px;
+    gap: 8px;
+    height: 40px;
     padding: 0 18px;
-    border: 1px solid var(--go);
-    background: transparent;
-    color: var(--go);
-    font-stretch: 62%;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    transition:
-      background 0.12s ease,
-      color 0.12s ease;
+    border: 0;
+    border-radius: 999px;
+    background: var(--fg);
+    color: #141517;
+    font-weight: 600;
+    font-size: 13.5px;
+    transition: transform 0.1s ease;
   }
 
   .btn:hover {
-    background: var(--go);
-    color: var(--bg);
-    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost {
+    background: var(--tile-2);
+    color: var(--fg);
   }
 
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    min-height: 32px;
-    padding: 0 10px;
-    border: 1px solid var(--line-2);
-    background: transparent;
-    color: var(--dim);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
+    height: 32px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--tile);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
   }
 
   .chip:hover {
-    border-color: var(--fg);
     color: var(--fg);
+    background: var(--tile-2);
   }
 
   .chip[aria-pressed="true"] {
-    border-color: var(--go);
-    background: var(--go);
-    color: var(--bg);
-    font-weight: 700;
+    background: var(--fg);
+    color: #141517;
   }
 
   .chip[aria-pressed="true"] .domain {
@@ -479,27 +421,27 @@
   }
 
   .select {
-    min-height: 32px;
-    padding: 0 28px 0 10px;
-    border: 1px solid var(--line-2);
-    border-radius: 0;
-    background: var(--bg);
-    color: var(--dim);
-    font-family: var(--font-mono);
-    font-size: 11px;
+    height: 32px;
+    padding: 0 30px 0 12px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--tile);
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
   }
 
   .who {
     border: 0;
+    border-radius: 50%;
     background: none;
     padding: 2px;
     line-height: 0;
     transition: opacity 0.12s ease;
   }
 
-  .who[aria-pressed="true"] .agent {
-    background: var(--ac);
-    color: var(--bg);
+  .who[aria-pressed="true"] {
+    box-shadow: 0 0 0 2px var(--fg);
   }
 
   .who[data-dimmed="true"] {
@@ -510,56 +452,57 @@
     border: 0;
     background: none;
     padding: 0;
-    color: var(--dim);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    color: var(--muted);
+    font-size: 13px;
   }
 
   .quiet:hover {
-    color: var(--go);
+    color: var(--fg);
   }
 
   kbd {
     padding: 0 5px;
-    border: 1px solid currentColor;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
     font-family: var(--font-mono);
-    font-size: 10px;
-    opacity: 0.75;
+    font-size: 11px;
   }
 
-  /* ───────────── Fiches du tableau ───────────── */
+  /* ───────────── Tableau ───────────── */
 
   .card {
-    position: relative;
     display: block;
     width: 100%;
-    padding: 12px 13px 11px;
-    border: 1px solid var(--line-2);
-    background: var(--panel);
+    padding: 13px 14px 12px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--tile-2);
     text-align: left;
     transition:
-      border-color 0.12s ease,
-      background 0.12s ease;
+      background 0.15s ease,
+      transform 0.15s ease;
   }
 
   .card:hover {
-    border-color: var(--go);
-    background: var(--raised);
+    background: var(--tile-3);
+    transform: translateY(-1px);
   }
 
   .card[data-kind="idea"] {
-    border-style: dashed;
     background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .card[data-kind="idea"]:hover {
+    background: var(--tile-2);
   }
 
   .card[data-kind="done"] {
-    border-color: var(--line);
-    color: var(--dim);
+    background: transparent;
+    color: var(--muted);
   }
 
-  /* Ce qui vient de changer clignote une fois. */
+  /* Ce qui vient de changer s'illumine une fois. */
   .fresh {
     animation: flash 2.4s ease-out 1;
   }
@@ -567,33 +510,8 @@
   @keyframes flash {
     0%,
     30% {
-      border-color: var(--go);
-      background: color-mix(in srgb, var(--go) 22%, var(--panel));
-      box-shadow: 0 0 0 1px var(--go);
+      box-shadow: inset 0 0 0 2px var(--lime);
     }
-  }
-
-  /* ───────────── Tableaux ───────────── */
-
-  .grid-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .grid-table th,
-  .grid-table td {
-    padding: 13px 14px 12px 0;
-    border-bottom: 1px solid var(--line);
-    text-align: left;
-    vertical-align: top;
-  }
-
-  .grid-table thead th {
-    padding-top: 0;
-    padding-bottom: 9px;
-    border-bottom: 1px solid var(--line-2);
-    color: var(--faint);
-    font-weight: 600;
   }
 
   /* ───────────── Détail d'une tâche ───────────── */
@@ -602,18 +520,20 @@
     position: fixed;
     inset: 0;
     z-index: 40;
-    background: rgba(0, 0, 0, 0.66);
+    background: rgba(10, 10, 12, 0.6);
+    backdrop-filter: blur(3px);
     animation: fade 0.16s ease-out;
   }
 
   .drawer {
     position: fixed;
-    inset: 0 0 0 auto;
+    inset: 10px 10px 10px auto;
     z-index: 41;
-    width: min(600px, 100vw);
+    width: min(580px, calc(100vw - 20px));
     overflow-y: auto;
-    border-left: 1px solid var(--go);
-    background: var(--panel);
+    border-radius: 24px;
+    background: var(--tile);
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6);
     animation: slide 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
@@ -631,7 +551,7 @@
   @keyframes slide {
     from {
       opacity: 0;
-      transform: translateX(36px);
+      transform: translateX(30px);
     }
   }
 
@@ -641,17 +561,11 @@
     }
   }
 
-  @keyframes breathe {
-    50% {
-      opacity: 0.35;
-    }
-  }
-
   /* ───────────── Texte Markdown venant de GitLab ───────────── */
 
   .md {
     overflow-wrap: anywhere;
-    color: var(--dim);
+    color: var(--muted);
   }
 
   .md > * + * {
@@ -664,7 +578,7 @@
   }
 
   .md ul {
-    list-style: square;
+    list-style: disc;
   }
 
   .md ol {
@@ -678,12 +592,13 @@
 
   .md input[type="checkbox"] {
     margin-right: 0.5em;
-    accent-color: var(--go);
+    accent-color: var(--lime);
   }
 
   .md code {
-    padding: 1px 5px;
-    background: var(--raised);
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: var(--tile-2);
     color: var(--fg);
     font-family: var(--font-mono);
     font-size: 0.86em;
@@ -692,7 +607,8 @@
   .md pre {
     padding: 12px;
     overflow-x: auto;
-    background: var(--raised);
+    border-radius: 12px;
+    background: var(--tile-2);
   }
 
   .md pre code {
@@ -710,11 +626,16 @@
 
   .md blockquote {
     padding-left: 12px;
-    border-left: 1px solid var(--line-2);
+    border-left: 2px solid var(--tile-3);
   }
 
   .md img {
     max-width: 100%;
+    border-radius: 10px;
+  }
+
+  .md a {
+    color: var(--blue);
   }
 }
 
