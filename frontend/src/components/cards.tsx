@@ -72,7 +72,7 @@ export function TaskCard({ issue }: { issue: Issue }) {
           </span>
           {deadline && !done && (
             <span className="mono shrink-0 text-faint" title={deadline.title}>
-              {deadline.night ? `nuit ${deadline.night}` : deadline.short_title} · {countdown(deadline.days_left)}
+              {deadline.night ? `nuit ${deadline.night}` : deadline.short_title} · {countdown(deadline)}
             </span>
           )}
         </span>

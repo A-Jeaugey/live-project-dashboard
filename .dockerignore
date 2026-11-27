@@ -1,0 +1,17 @@
+# Tout ce qui n'est pas nécessaire à la construction de l'image, et surtout les secrets.
+.git
+.env
+.env.*
+!.env.example
+data/
+docs/
+dev/
+tests/
+.venv/
+**/__pycache__/
+.pytest_cache/
+.ruff_cache/
+frontend/node_modules/
+frontend/dist/
+*.md
+Makefile

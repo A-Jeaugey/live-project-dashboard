@@ -31,8 +31,12 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 110
+extend-exclude = ["frontend"]
 target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "C4", "RUF"]
 ignore = ["RUF001", "RUF002", "RUF003"]  # apostrophes et espaces typographiques du français
+
+[tool.ruff.lint.per-file-ignores]
+"dev/fake_gitlab/server.py" = ["E501"]  # page HTML et textes d'aide embarqués

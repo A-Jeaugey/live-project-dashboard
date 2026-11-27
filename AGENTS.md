@@ -37,4 +37,26 @@ Outil interne du groupe : un dashboard web et un bot Discord branchés sur le pr
 
 ## Commandes
 
-À compléter quand la stack sera validée (lancement, tests, lint).
+| Commande | Effet |
+|---|---|
+| `make install` | Installe les dépendances Python (uv) et celles du frontend (npm) |
+| `make dev-gitlab` | Faux GitLab de développement sur `127.0.0.1:8001` |
+| `make dev-app` | Serveur sur `127.0.0.1:8000`, branché sur le faux GitLab (`dev/dev.env`) |
+| `make dev-front` | Interface sur `127.0.0.1:5173`, qui relaie `/api`, `/auth` et `/hooks` vers le serveur |
+| `make test` | Tests Python |
+| `make lint` / `make format` | ruff : vérification / correction |
+| `cd frontend && npm run build` | Vérifie les types puis compile l'interface |
+| `cd frontend && npm run dev:mock` | Interface seule, avec des données d'exemple (`npm run dev:vide` pour un projet vide) |
+
+Avant de dire qu'un changement fonctionne : `make test`, `make lint`, `npm run build`, et pour l'interface un
+essai dans un navigateur (les trois serveurs de dev lancés).
+
+## Repères
+
+- `frontend/src/lib/types.ts` est le contrat entre le serveur et l'interface ; `app/core/models.py` en est le
+  miroir. Les deux se modifient ensemble.
+- Les classes CSS du carnet vivent dans `@layer components` de `frontend/src/styles.css` : hors de cette couche,
+  elles écraseraient les utilitaires Tailwind.
+- Le serveur pose une politique de sécurité (CSP) qui interdit les scripts écrits dans la page : tout script passe
+  par un fichier.
+- Un seul serveur Vite à la fois par dossier (verrou de Vite).

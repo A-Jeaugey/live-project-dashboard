@@ -373,3 +373,30 @@ async def test_la_boucle_de_fond_tourne_et_s_arrete_proprement(gitlab, client, c
     calls = len(gitlab.requests)
     await asyncio.sleep(0.05)
     assert len(gitlab.requests) == calls, "plus aucune requête après l'arrêt"
+
+
+async def test_des_donnees_illisibles_ne_vident_pas_l_ecran(gitlab, sync, clock):
+    seed(gitlab)
+    await sync.full_refresh()
+    version = sync.snapshot.version
+
+    # Une issue sans date de création : la lecture réussit, mais l'instantané ne peut pas être construit.
+    gitlab.issues[12] = {"iid": 12, "title": "Réponse incomplète", "state": "opened", "labels": []}
+    clock.advance(seconds=30)
+    assert await sync.full_refresh() is False
+    snapshot = sync.snapshot
+    assert snapshot.sync.last_error == INTERNAL_ERROR and not snapshot.sync.ok
+    assert len(snapshot.issues) == 3, "le dernier instantané lisible reste affiché"
+    assert snapshot.version == version + 1, "l'interface est prévenue"
+
+    gitlab.issues[12] = factories.issue(12, labels=["À faire"])
+    clock.advance(seconds=30)
+    assert await sync.full_refresh() is True
+    assert sync.snapshot.sync.ok and sync.snapshot.sync.last_error is None
+
+
+async def test_des_donnees_illisibles_au_demarrage_ne_font_pas_planter(gitlab, sync):
+    gitlab.issues[1] = {"iid": 1, "state": "opened"}
+    await sync.start()
+    assert sync.snapshot.sync.last_error == INTERNAL_ERROR
+    assert sync.snapshot.issues == []

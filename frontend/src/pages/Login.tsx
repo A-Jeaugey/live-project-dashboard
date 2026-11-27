@@ -13,9 +13,20 @@ function Cover({ children }: { children: ReactNode }) {
 }
 
 const REFUSALS: Record<string, string> = {
-  "non-membre": "Ce compte GitLab n'est pas membre du projet du jeu. Le carnet est réservé au groupe.",
-  echec: "La connexion avec GitLab n'a pas abouti. Réessaie ; si ça recommence, préviens Arthur.",
+  non_membre: "Ce compte GitLab n'est pas membre du projet du jeu. Le carnet est réservé au groupe.",
+  connexion: "La connexion avec GitLab n'a pas abouti. Réessaie.",
+  gitlab: "GitLab ne répond pas pour l'instant. Réessaie dans un moment.",
+  configuration: "La connexion n'est pas encore configurée sur le serveur. Préviens Arthur.",
 };
+
+/** Adresse de connexion qui ramène ensuite à la page demandée, sans le code d'erreur éventuel. */
+function loginUrl(): string {
+  const params = new URLSearchParams(window.location.search);
+  params.delete("erreur");
+  const query = params.toString();
+  const here = window.location.pathname + (query ? `?${query}` : "");
+  return here === "/" ? "/auth/login" : `/auth/login?next=${encodeURIComponent(here)}`;
+}
 
 export function Login() {
   const reason = new URLSearchParams(window.location.search).get("erreur");
@@ -30,11 +41,11 @@ export function Login() {
       </p>
       {reason && (
         <p role="alert" className="hand hand-pen mt-6 text-[1.5rem] leading-tight">
-          {REFUSALS[reason] ?? REFUSALS.echec}
+          {REFUSALS[reason] ?? REFUSALS.connexion}
         </p>
       )}
       <div className="mt-9 flex flex-wrap items-center gap-6">
-        <a className="btn" href="/auth/login">
+        <a className="btn" href={loginUrl()}>
           Se connecter avec le GitLab de l'école
         </a>
         <Stamp color="var(--pen)" tilt={-7}>

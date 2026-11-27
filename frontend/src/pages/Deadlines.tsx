@@ -11,7 +11,7 @@ const REMAINING_ORDER: ColumnKey[] = ["doing", "todo", "idea"];
 
 /** Le bilan d'une échéance en Markdown, prêt à coller dans le rapport, les diapositives ou Discord. */
 function report(m: Model, d: Deadline, issues: Issue[]): string {
-  const lines = [`## ${d.title} — semaine du ${dayMonth(d.week_of)} (${countdown(d.days_left)})`, ""];
+  const lines = [`## ${d.title} — semaine du ${dayMonth(d.week_of)} (${countdown(d)})`, ""];
   const ms = d.milestone;
   if (ms) {
     lines.push(
@@ -302,10 +302,10 @@ export function Deadlines() {
                       </Stamp>
                     ) : isNext ? (
                       <span className="hand hand-pen text-[34px]" style={{ transform: "rotate(-4deg)" }}>
-                        <Circled>{countdown(d.days_left)}</Circled>
+                        <Circled>{countdown(d)}</Circled>
                       </span>
                     ) : (
-                      <span className="mono text-[15px] text-soft">{countdown(d.days_left)}</span>
+                      <span className="mono text-[15px] text-soft">{countdown(d)}</span>
                     )}
                   </span>
                 </button>

@@ -80,7 +80,23 @@ export function duration(hours: number): string {
   return `${Math.floor(hours / 24)} j`;
 }
 
-export const countdown = (days: number) => (days === 0 ? "Jour J" : days > 0 ? `J-${days}` : `J+${-days}`);
+interface Countdownable {
+  days_left: number;
+  past: boolean;
+  week_of: string;
+  target_date: string;
+}
+
+/**
+ * « J-10 » avant l'échéance. Les échéances sont données par semaine : une fois le lundi atteint,
+ * on dit « cette semaine » plutôt qu'un faux « Jour J », sauf si la date exacte est connue.
+ */
+export function countdown(deadline: Countdownable): string {
+  if (deadline.days_left > 0) return `J-${deadline.days_left}`;
+  if (deadline.past) return "passée";
+  if (deadline.days_left === 0 && deadline.target_date !== deadline.week_of) return "Jour J";
+  return "cette semaine";
+}
 
 /** Liste en français : « Louis », « Louis et Théo », « Louis, Théo et Samuel ». */
 export function list(items: string[]): string {

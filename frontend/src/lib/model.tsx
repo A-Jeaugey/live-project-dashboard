@@ -12,6 +12,8 @@ export interface Model {
   member: (username: string) => Member | undefined;
   /** Prénom d'usage, ou l'identifiant si la personne est inconnue. */
   first: (username: string | null) => string;
+  /** Auteur d'un événement : prénom d'un membre, sinon son nom GitLab (robot d'un token, ancien membre). */
+  who: (event: { actor: string | null; actor_name: string | null }) => string;
   domainColor: (name: string) => string;
   deadline: (key: string | null | undefined) => Deadline | undefined;
   /** Prochaine échéance non passée. */
@@ -62,6 +64,8 @@ export function ModelProvider({ snap, me, children }: { snap: Snapshot; me: Me; 
       mr: (iid) => mrs.get(iid),
       member: (username) => members.get(username),
       first: (username) => (username ? (members.get(username)?.first_name ?? username) : "Quelqu'un"),
+      who: ({ actor, actor_name }) =>
+        (actor ? members.get(actor)?.first_name : undefined) ?? actor_name ?? actor ?? "Quelqu'un",
       domainColor: (name) => colors.get(name) ?? "#8a8578",
       deadline: (key) => (key ? deadlines.get(key) : undefined),
       nextDeadline: snap.deadlines.filter((d) => !d.past).sort((a, b) => a.days_left - b.days_left)[0],

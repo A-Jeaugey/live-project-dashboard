@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { IssueLink, OutLink, PageTitle, Photo, Section } from "../components/bits";
-import { ago, duration, plural } from "../lib/format";
+import { ago, countdown, duration, plural } from "../lib/format";
 import { useModel } from "../lib/model";
 
 /** L'équipe, présentée comme une feuille d'appel : qui est « présent » au tableau, et sur quoi. */
@@ -225,7 +225,7 @@ export function Team() {
                 return (
                   <li key={issue.iid}>
                     <span className="gutter">
-                      {deadline && <span className="mono text-[12px] text-faint">J-{deadline.days_left}</span>}
+                      {deadline && <span className="mono text-[12px] text-faint">{countdown(deadline)}</span>}
                     </span>
                     <div className="body">
                       <IssueLink issue={issue} />

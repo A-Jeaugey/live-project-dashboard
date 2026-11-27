@@ -1,91 +1,97 @@
 # État actuel
 
-Dernière mise à jour : **27 novembre 2026** (session de cadrage).
+Dernière mise à jour : **27 novembre 2026**, fin de la session « phase 1 ».
 
 ## Où on en est
 
-- **Phase : cadrage.** Aucun code applicatif. La proposition attend la validation du groupe.
-- Rédigé : `docs/UX.md` (parcours et écrans), `docs/ARCHITECTURE.md` (stack, flux, authentification,
-  hébergement, contraintes de l'instance), `docs/DECISIONS.md`.
-- Maquette des écrans principaux : <https://claude.ai/artifact/L3FZCmggkbCqUPidoAsgWB> (lien privé : Arthur doit
-  la partager depuis le menu « Share » pour que les autres membres puissent l'ouvrir). Elle montre : Aujourd'hui,
-  Tableau, Point hebdo, Échéance, tableau sur téléphone, détail d'une tâche, messages du bot. Ses données sont
-  des exemples.
+**La phase 1 (lecture seule) est écrite et fonctionne sur un ordinateur de développement.** Elle n'est pas encore
+déployée, et la connexion n'a pas encore été essayée avec le vrai GitLab de l'école.
 
-## Constats importants
+Ce qui existe :
 
-1. **Le projet GitLab du jeu est vide** : un commit (README par défaut), aucun label, aucun jalon, aucune issue,
-   aucune merge request, aucun pipeline, pas de `docs/`, pas d'`AI_LOG.md`. L'organisation décrite dans le cahier
-   des charges reste à créer dans GitLab.
-2. **L'instance est en GitLab 19.5.8**, joignable depuis Internet, fournisseur OpenID Connect actif. Détail :
-   `docs/ARCHITECTURE.md`, section 11.
-3. **La prochaine échéance est proche** : remise du CdST la semaine du 7 décembre 2026 (J-10 au 27 novembre). Les
-   rappels J-30 et J-14 de cette échéance sont déjà passés.
+- **Interface** : Aujourd'hui, Tableau, Feuille d'appel (équipe), Cahier de textes (échéances), Projet, détail
+  d'une tâche, écran de connexion. Thème papier et thème tableau noir. Utilisable sur téléphone.
+- **Serveur** : lecture de GitLab (issues, labels, jalons, membres, merge requests, pipelines, commits,
+  événements), cache en mémoire, interrogation périodique, réception des webhooks, flux temps réel, connexion
+  par OpenID Connect réservée aux membres du projet.
+- **Déploiement** : `Dockerfile`, `docker-compose.yml` avec tunnel Cloudflare, `.env.example` documenté.
+- **Documentation** : `README.md` (essai local et installation), `docs/DISCORD_SETUP.md`.
 
-## À valider par le groupe
+Captures : `docs/apercu/`. Elles montrent des données d'exemple.
 
-Décisions D-003 à D-016 de `docs/DECISIONS.md`. Les cinq qui bloquent la phase 1 :
+## Ce qui a été vérifié, et comment
 
-| Sujet | Proposition |
+| Vérification | Résultat |
 |---|---|
-| Stack | Python (FastAPI, `discord.py`, `httpx`), React + TypeScript, SQLite, Docker |
-| Authentification | Connexion par le GitLab de l'école, identité seule ; repli Discord |
-| Écritures | Par le token de projet du serveur, pas au nom de chaque membre |
-| Exposition | Caddy, tunnel Cloudflare ou reverse proxy existant |
-| Écrans | Ceux de `docs/UX.md` et de la maquette, ajouts proposés compris ou non |
+| Tests Python (`make test`) | 187 passent |
+| Style (`make lint`) | propre |
+| Types et compilation de l'interface (`npm run build`) | passent |
+| Parcours dans un vrai navigateur, contre le faux GitLab : page de connexion, choix d'un membre, retour à la page demandée, tableau, détail avec description et commentaires, déconnexion | passe |
+| Mise à jour en direct : une tâche prise dans le faux GitLab change de colonne à l'écran sans recharger (surligneur et petit mot « Louis a pris #12 ») | passe, en moins d'une seconde avec webhook |
+| Refus d'un compte qui n'est pas membre du projet | passe |
+| Webhook sans secret ou avec un mauvais secret ; requête de modification venue d'un autre site | refusés (403) |
+| Webhook reçu en double | ignoré (vérifié par les tests) |
+| GitLab injoignable au démarrage, puis de retour | le carnet reste affichable et se resynchronise (vérifié pendant l'écriture du serveur, non rejoué ensuite) |
+| Lecture du **vrai** projet GitLab (requêtes de lecture uniquement) | instantané correct d'un projet vide : 5 membres, 10 labels et 5 jalons manquants |
+| Rendu sur ordinateur et téléphone, deux thèmes, projet vide | relu sur captures |
+| Image Docker | construite et lancée dans le bac à sable, avec un Dockerfile adapté à son réseau |
 
-## Questions ouvertes
+## Ce qui n'a pas pu être vérifié
 
-Pour chacune, la réponse par défaut qui sera appliquée si personne ne s'y oppose.
+- **La connexion avec le vrai GitLab de l'école** : il faut d'abord créer l'application OAuth (étape 2 du README).
+- **Les webhooks envoyés par le vrai GitLab**, en particulier la signature HMAC, écrite d'après la convention
+  Standard Webhooks.
+- **Le tunnel Cloudflare** et un `docker compose up` complet sur le serveur.
+- **Le `Dockerfile` tel qu'il est dans le repo** : dans le bac à sable, le réseau imposait d'y ajouter un
+  certificat. Il devrait fonctionner tel quel ailleurs, mais ce n'est pas prouvé.
+- **Les avatars** : sur le vrai GitLab, ils pointent vers le site de photos de l'école. S'ils ne se chargent pas,
+  l'initiale de la personne s'affiche à la place.
 
-| N° | Question | Réponse par défaut |
-|---|---|---|
-| Q1 | Qui crée les labels (`Idée`, `À faire`, `En cours` et les sept domaines) dans GitLab ? | Le dashboard propose de les créer, avec une confirmation qui liste ce qui sera créé |
-| Q2 | Quels jalons créer ? | Les cinq échéances à venir, avec pour date le lundi de leur semaine ; pas de jalon pour l'échéance passée |
-| Q3 | Que faire d'une issue ouverte sans label de colonne ? | Colonne « Idées » avec la marque « À trier » |
-| Q4 | Peut-on prendre une tâche déjà prise ? | Oui, après confirmation ; la tâche change de responsable |
-| Q5 | Peut-on fermer une tâche depuis le dashboard ? | Oui, après confirmation (utile pour les tâches sans code) |
-| Q6 | Remettre une tâche en « À faire » retire-t-il l'assignation ? | Oui |
-| Q7 | « Fait récemment » : quelle durée ? | 14 jours, réglable |
-| Q8 | Qu'est-ce qu'une merge request « en attente de relecture » ? | Ouverte, pas en brouillon, sans approbation d'un autre membre que l'auteur |
-| Q9 | Les relances (48 h, 14 jours) partent-elles le week-end ? | Non : en semaine, à heure fixe |
-| Q10 | Comment compter l'inactivité d'une tâche ? | Dernière modification de l'issue ou de sa merge request liée |
-| Q11 | Transparence IA : qu'est-ce qu'un « module » ? | Déduit du chemin des fichiers cités, selon une table de correspondance réglable |
-| Q12 | Commits `[IA]` : sur quelles branches ? | `main` uniquement |
-| Q13 | Comment le jury voit-il la vue « Transparence IA » ? | Depuis le compte d'un membre ; pas d'accès public |
-| Q14 | Compte à rebours : quelle date exacte ? | Le lundi de la semaine indiquée, fuseau Europe/Paris ; la date réelle pourra être précisée dans la configuration quand elle sera connue |
-| Q15 | Horaires des messages automatiques ? | Récap le lundi à 8 h, rappels d'échéance à 9 h, relances à 9 h 30 ; tout est réglable |
-| Q16 | Le récap nomme-t-il les membres sans tâche ? | Oui, sous l'intitulé « Disponible » |
-| Q17 | Ce repo reste-t-il sur GitHub alors que le jeu est sur le GitLab de l'école ? | Oui, tant que les cinq membres y ont accès |
-| Q18 | Peut-on créer un projet GitLab « bac à sable » pour essayer les écritures sans toucher au vrai tableau ? | Souhaitable avant la phase 2 |
+## Constats
 
-## Vérifications à faire par un membre
+1. **Le projet GitLab du jeu est toujours vide** (un commit, aucun label, aucun jalon, aucune issue). Le carnet
+   affichera donc « Copie blanche » et la liste de ce qu'il manque. Les labels et les jalons sont à créer à la main
+   dans GitLab, ou attendront la phase 2, où le carnet proposera de le faire.
+2. **Prendre une tâche ne laisse aucune trace dans le journal d'événements de GitLab.** Le fil d'activité ne
+   montre donc que les ouvertures, fermetures, commentaires, merge requests et poussées. Le changement de colonne
+   est quand même annoncé en direct par l'interface. Le bot aura besoin de la même détection côté serveur.
+3. **Pendant la semaine d'une échéance**, le compte à rebours affiche « cette semaine » plutôt qu'un nombre.
 
-Elles demandent une session GitLab ou le rôle Maintainer, que l'IA n'a pas :
+## Décisions
 
-- [ ] Ouvrir `https://gitlab.cri.epita.fr/-/user_settings/applications` : la page propose-t-elle « Add new
-      application » ?
-- [ ] *Settings → CI/CD → Runners* du projet du jeu : y a-t-il des runners d'instance disponibles ?
-- [ ] *Settings → Integrations* : « Discord Notifications » est-elle proposée ?
-- [ ] *Settings → Webhooks* : la page est-elle accessible ? Le test d'envoi vers l'extérieur se fera quand le
-      serveur sera en ligne.
+Validées par Arthur le 27 novembre : React + TypeScript, connexion par le GitLab de l'école avec écritures par le
+robot du projet, tunnel Cloudflare, les quatre ajouts proposés. Le reste de la proposition est appliqué par
+défaut. **En attente d'un avis** : la direction visuelle « le carnet » (D-017) et la numérotation des échéances
+en « nuits » (D-018). Les quatre autres membres ne se sont pas encore exprimés. Détail : `docs/DECISIONS.md`.
 
-## Accès de l'IA au GitLab
+## À faire par un membre
 
-Un token de projet a été fourni pour les vérifications en lecture. Il a été créé avec le rôle Developer et toutes
-les portées, écriture comprise, alors que `read_api` suffit. Seules des lectures ont été effectuées. **À faire :**
-le révoquer et le remplacer par un token `read_api` (rôle Maintainer si l'IA doit vérifier elle-même les runners,
-webhooks et intégrations ; Reporter sinon).
+- [ ] Regarder les captures de `docs/apercu/` ou lancer le carnet en local (README), et dire si l'apparence
+      convient.
+- [ ] **Révoquer le token GitLab « Claude code »** créé le 27 novembre avec toutes les portées, et en créer un en
+      `read_api` (rôle Reporter) pour le serveur.
+- [ ] Créer l'application OAuth, le tunnel Cloudflare et le `.env`, puis déployer (README, « Installer sur le
+      serveur »).
+- [ ] Créer le webhook GitLab et cliquer « Test ».
+- [ ] Créer les salons Discord et activer les notifications natives (`docs/DISCORD_SETUP.md`).
+- [ ] Créer dans GitLab les labels `Idée`, `À faire`, `En cours`, les sept labels de domaine et les jalons, ou
+      attendre la phase 2.
+
+## Questions encore ouvertes
+
+Les réponses par défaut de la session de cadrage sont appliquées. Restent à trancher avant la phase 2 :
+
+| Question | Réponse par défaut |
+|---|---|
+| Peut-on créer un projet GitLab « bac à sable » pour essayer les écritures sans toucher au vrai tableau ? | Souhaitable |
+| Prendre une tâche déjà prise : remplacer la personne, ou refuser ? | Remplacer après confirmation |
+| Le bot publie-t-il toutes les notifications, l'intégration native de GitLab restant en secours ? | Oui |
 
 ## Prochaine étape
 
-Après validation : **phase 1, lecture seule**.
+Démonstration de la phase 1 au groupe. Après validation : **phase 2, les actions**.
 
-1. Squelette du projet, `.env.example`, `docker compose`.
-2. Logique pure et ses tests : colonnes, calendrier et comptes à rebours.
-3. Client GitLab, synchro, cache, interrogation périodique ; réception des webhooks.
-4. Connexion et contrôle d'accès.
-5. Écrans Aujourd'hui, Tableau, Équipe, Échéances, Projet, en lecture seule, avec mise à jour en temps réel.
-6. `docs/DISCORD_SETUP.md`.
-
-Démonstration au groupe avant de passer à la phase 2.
+1. Module d'écriture unique : prendre une tâche, créer une idée, changer de colonne ; création des labels et
+   des jalons manquants après confirmation.
+2. Les mêmes actions dans l'interface (glisser-déposer, touche `I`, bouton « Je prends »), vue « Point hebdo ».
+3. Bot Discord : commandes, bouton « Je prends », notifications.

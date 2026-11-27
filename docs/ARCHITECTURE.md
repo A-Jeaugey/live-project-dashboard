@@ -1,6 +1,7 @@
 # Architecture
 
-> Statut : **proposition du 27 novembre 2026, en attente de validation du groupe.**
+> Statut : architecture **validée par Arthur le 27 novembre 2026** et mise en œuvre pour la phase 1 (lecture
+> seule). Les parties « actions », « bot » et « automatisations » décrivent la suite : elles ne sont pas écrites.
 > Chaque choix est repris dans `docs/DECISIONS.md` avec son statut.
 
 ## 1. Vue d'ensemble
@@ -64,7 +65,7 @@ flowchart LR
 | Qualité | ruff | Formatage et lint en un outil |
 | Dépendances Python | uv | Installation rapide et reproductible |
 | Déploiement | Docker + `docker compose` | Une commande pour tout lancer |
-| HTTPS | Caddy, ou tunnel Cloudflare (à trancher) | Voir section 9 |
+| HTTPS | Tunnel Cloudflare | Aucun port ouvert à la maison ; voir section 9 |
 
 Alternative étudiée pour le frontend : pages rendues par le serveur avec HTMX. Avantage : presque tout reste en
 Python. Inconvénient : le glisser-déposer, les mises à jour optimistes et la palette de commandes deviennent
@@ -74,15 +75,16 @@ laborieux. Elle reste possible si le groupe ne veut pas de TypeScript.
 
 ```
 app/
-  core/          Logique pure, sans réseau : colonnes, calendrier, rappels, parseur AI_LOG, modèles
-  gitlab/        Client de l'API, vérification des webhooks, synchro et cache
-  actions/       Prendre, créer une idée, déplacer : le seul chemin d'écriture
-  web/           Routes de l'API, connexion, SSE, fichiers du frontend
-  bot/           Commandes slash, boutons, notifications
-  automations/   Récap hebdomadaire, rappels
+  core/          Logique pure, sans réseau : colonnes, calendrier, alertes, webhooks, modèles
+  gitlab/        Client de l'API, synchro, cache, bus d'événements
+  web/           Routes de l'API, connexion, SSE, en-têtes de sécurité, fichiers du frontend
   store/         SQLite
+  actions/       (phase 2) Prendre, créer une idée, déplacer : le seul chemin d'écriture
+  bot/           (phase 2) Commandes slash, boutons, notifications
+  automations/   (phase 3) Récap hebdomadaire, rappels
 frontend/        Application React
-config/          Réglages non secrets (calendrier, membres, labels, horaires)
+config/          Réglages non secrets (calendrier, membres, labels, seuils)
+dev/             Faux GitLab pour le développement
 tests/
 docs/
 ```
@@ -99,8 +101,9 @@ règles à tester (colonnes, comptes à rebours, rappels, parseur).
 2. Quand un webhook arrive, il est vérifié, puis traité comme un **signal** : « quelque chose a changé sur
    l'issue 12 ». La synchro relit l'élément concerné dans l'API. Le contenu du webhook n'est jamais copié tel quel
    dans le cache.
-3. Sans webhooks, la synchro interroge l'API toutes les 30 secondes avec `updated_after` (trois requêtes par
-   passage).
+3. Sans webhooks, la synchro interroge l'API toutes les 30 secondes avec `updated_after` : 8 requêtes par
+   passage, plus une par merge request ouverte, soit environ 16 requêtes par minute. Une relecture complète en
+   demande une dizaine.
 4. Dans tous les cas, une relecture complète a lieu toutes les 10 minutes pour corriger un éventuel signal perdu.
 5. La synchro compare l'ancien et le nouvel instantané et publie les différences sur le bus : « issue créée »,
    « issue prise », « merge request ouverte », etc.
@@ -163,8 +166,9 @@ l'école. Le risque est disproportionné pour un outil interne hébergé à la m
 
 ### 5.4 Token GitLab du serveur
 
-- **Project access token**, rôle **Reporter**, portée **`api`**. C'est le minimum qui permette de lire le projet
-  (issues, merge requests, pipelines, membres, fichiers) et de créer ou modifier issues, labels et jalons.
+- **Project access token**, rôle **Reporter**. Portée **`read_api`** tant que l'outil ne fait que lire
+  (phase 1), puis **`api`** à partir de la phase 2 : c'est le minimum qui permette de créer ou modifier issues,
+  labels et jalons.
 - Le webhook du projet est créé une fois à la main par un Owner : le token n'a pas besoin du rôle Maintainer.
 - Expiration : obligatoire (un an au maximum par défaut dans GitLab ; la limite propre à l'instance n'a pas été
   vérifiée). Un rappel de renouvellement sera affiché avant l'échéance.
@@ -190,8 +194,14 @@ labels, les seuils et les horaires. Secrets : `.env`, jamais versionné.
 - Secrets uniquement dans `.env` côté serveur ; rien dans le frontend ni dans les logs.
 - Webhooks GitLab : vérification du secret `X-Gitlab-Token` par comparaison à temps constant et, puisque
   l'instance est en version 19, de la signature HMAC (`webhook-signature`, avec contrôle de l'horodatage contre
-  le rejeu). Les doublons sont écartés grâce à l'en-tête `Idempotency-Key`.
-- Toute route de l'API exige une session valide ; les routes d'écriture vérifient en plus l'origine de la requête.
+  le rejeu). Si les deux sont configurés, les deux doivent être valides ; si aucun ne l'est, tout webhook est
+  refusé. Les doublons sont écartés grâce à l'en-tête `Idempotency-Key`. La signature HMAC a été écrite d'après
+  la convention Standard Webhooks ; elle reste à confirmer avec un vrai webhook de l'instance.
+- Toute route de l'API exige une session valide ; toute requête qui modifie quelque chose doit en plus venir de
+  l'origine du carnet (en-tête `Origin`).
+- En-têtes de sécurité sur chaque réponse, dont une politique de contenu (CSP) qui n'autorise que les scripts
+  servis par l'application.
+- Après connexion, le retour ne se fait que vers une page du carnet, jamais vers une autre adresse.
 - Le conteneur tourne sans privilèges ; seul le reverse proxy est exposé.
 - Le bot ignore tout autre serveur Discord et tout compte non lié.
 
@@ -208,16 +218,19 @@ Tests du client GitLab et des actions avec des réponses simulées. Aucun test n
 
 ## 9. Hébergement et exposition
 
-`docker compose up -d` lance le conteneur `app` (serveur, bot, frontend compilé) et, selon le profil choisi, le
-reverse proxy.
+`docker compose up -d` lance deux conteneurs : `app` (serveur et interface compilée) et `cloudflared`, le
+**tunnel Cloudflare** retenu pour l'exposition. Le domaine doit être géré par Cloudflare ; le jeton du tunnel va
+dans `.env` ; le nom d'hôte public du tunnel pointe vers `http://app:8000`. Aucun port n'est ouvert sur la box et
+l'adresse IP de la maison reste cachée.
 
-| Option | Ce qu'il faut configurer | Quand la choisir |
-|---|---|---|
-| **A. Caddy inclus** | Enregistrement DNS du sous-domaine vers l'adresse IP publique de la maison ; redirection des ports 80 et 443 de la box vers le serveur. Le certificat HTTPS est obtenu automatiquement | Adresse IP publique disponible, pas de reverse proxy existant |
-| **B. Tunnel Cloudflare** | Domaine géré par Cloudflare ; un jeton de tunnel dans `.env`. Aucun port à ouvrir, l'adresse IP de la maison reste cachée | Box sans IP publique, ou volonté de ne rien ouvrir |
-| **C. Reverse proxy existant** | Faire pointer le proxy déjà en place vers le conteneur `app` | Un proxy tourne déjà sur le serveur |
+Le conteneur `app` tourne sans privilèges (utilisateur dédié, système de fichiers en lecture seule, aucune
+capacité Linux) et n'est joignable depuis la machine que sur `127.0.0.1`. Seul le dossier de données est
+inscriptible.
 
-Dans les trois cas, GitLab doit pouvoir joindre `https://<sous-domaine>/hooks/gitlab`. Si l'école bloque les
+Alternatives écartées, toujours possibles en retirant le service `cloudflared` : Caddy avec les ports 80 et 443
+redirigés depuis la box, ou un reverse proxy déjà en place pointé vers le port local de `app`.
+
+GitLab doit pouvoir joindre `https://<sous-domaine>/hooks/gitlab`. Si l'école bloque les
 requêtes sortantes de son GitLab, l'interrogation périodique prend le relais sans rien changer d'autre.
 
 ## 10. Extension prévue : `/resume`
@@ -243,7 +256,7 @@ Vérifications du 27 novembre 2026.
 | Webhooks du projet | **Non vérifié** (rôle Maintainer requis) ; la fonction existe dans cette version | À vérifier dans *Settings → Webhooks* |
 | Requêtes sortantes vers Internet | **Non vérifié** : un administrateur peut les restreindre | Se teste avec le bouton « Test » d'un webhook |
 | Intégration « Discord Notifications » | **Non vérifiée** (rôle Maintainer requis) ; dans cette version elle accepte une URL de webhook par type d'événement, et seulement des URL `https://discord.com/api/webhooks/…` | À vérifier dans *Settings → Integrations* |
-| Limite de débit | 360 requêtes par minute sans authentification ; limite authentifiée inconnue. Le besoin est d'environ 6 requêtes par minute | En-têtes de réponse |
+| Limite de débit | 360 requêtes par minute sans authentification ; limite authentifiée inconnue. Le besoin est d'environ 16 requêtes par minute sans webhooks, presque rien avec | En-têtes de réponse |
 
 État du projet du jeu au 27 novembre 2026 : privé, cinq membres Owner, un seul commit (README par défaut),
 **aucun label, aucun jalon, aucune issue, aucune merge request, aucun pipeline, pas de dossier `docs/`**.

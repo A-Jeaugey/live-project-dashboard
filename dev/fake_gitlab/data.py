@@ -198,43 +198,174 @@ def build_state(base_url: str, now: datetime | None = None) -> State:
     cdst, soutenance = "Remise du CdST", "Première soutenance"
 
     # Deux anciennes tâches fermées : elles comptent dans le jalon CdST mais plus dans « Fait ».
-    issue(3, "Choisir le sujet et le nom du jeu", labels=["orga"], author="arthur.jeaugey",
-          assignees=["arthur.jeaugey"], milestone=cdst, created=ago(days=34), updated=ago(days=30), closed=ago(days=30))  # fmt: skip
-    issue(5, "Lister les fonctionnalités pour le CdST", labels=["orga"], author="arthur.jeaugey",
-          assignees=["samuel.mopty"], milestone=cdst, created=ago(days=32), updated=ago(days=22), closed=ago(days=22))  # fmt: skip
+    issue(
+        3,
+        "Choisir le sujet et le nom du jeu",
+        labels=["orga"],
+        author="arthur.jeaugey",
+        assignees=["arthur.jeaugey"],
+        milestone=cdst,
+        created=ago(days=34),
+        updated=ago(days=30),
+        closed=ago(days=30),
+    )
+    issue(
+        5,
+        "Lister les fonctionnalités pour le CdST",
+        labels=["orga"],
+        author="arthur.jeaugey",
+        assignees=["samuel.mopty"],
+        milestone=cdst,
+        created=ago(days=32),
+        updated=ago(days=22),
+        closed=ago(days=22),
+    )
 
-    issue(8, "Plan de l'étage relevé et mis au propre", labels=["3d"], author="samuel.mopty",
-          assignees=["samuel.mopty"], milestone=soutenance, created=ago(days=20), updated=ago(hours=15.5), closed=ago(hours=15.5))  # fmt: skip
-    issue(9, "Modéliser le couloir principal de l'étage", labels=["En cours", "3d"], author="samuel.mopty",
-          assignees=["samuel.mopty"], milestone=soutenance, created=ago(days=12), updated=ago(hours=5))  # fmt: skip
-    issue(11, "Prototype de la scène Panda3D", labels=["code"], author="louis.landanger",
-          assignees=["louis.landanger"], milestone=soutenance, created=ago(days=18), updated=ago(days=2), closed=ago(days=2))  # fmt: skip
-    issue(12, "Déplacements du joueur et collisions", labels=["À faire", "gameplay"], author="arthur.jeaugey",
-          milestone=soutenance, created=ago(days=15), updated=ago(days=6))  # fmt: skip
-    issue(14, "IA de poursuite : le prof suit le joueur dans les couloirs", labels=["En cours", "profs"],
-          author="theo.wu", assignees=["theo.wu"], milestone=soutenance, created=ago(days=14), updated=ago(hours=4.75),
-          description=DESCRIPTION_14, notes=2, tasks=(2, 3))  # fmt: skip
-    issue(17, "Menu principal et écran de pause", labels=["En cours", "ui"], author="eliott.damagnez",
-          assignees=["eliott.damagnez"], milestone=soutenance, created=ago(days=21), updated=ago(days=16, hours=3))  # fmt: skip
-    issue(18, "Bruits de pas selon la surface", labels=["À faire", "son"], author="samuel.mopty",
-          milestone=soutenance, created=ago(days=10), updated=ago(days=7))  # fmt: skip
-    issue(19, "Lampe torche avec batterie", labels=["À faire", "gameplay"], author="theo.wu",
-          milestone=soutenance, created=ago(days=9), updated=ago(days=9))  # fmt: skip
-    issue(20, "Plan du CdST validé en groupe", labels=["orga"], author="arthur.jeaugey",
-          assignees=["arthur.jeaugey"], milestone=cdst, created=ago(days=11), updated=ago(days=4), closed=ago(days=4))  # fmt: skip
-    issue(21, "Rédiger la section « Répartition des tâches » du CdST", labels=["En cours", "orga"],
-          author="arthur.jeaugey", assignees=["arthur.jeaugey"], milestone=cdst, created=ago(days=6), updated=ago(days=1))  # fmt: skip
-    issue(22, "Relire et mettre en page le CdST", labels=["À faire", "orga"], author="arthur.jeaugey",
-          milestone=cdst, created=ago(days=6), updated=ago(days=5))  # fmt: skip
-    issue(23, "Un prof qui n'apparaît que si on regarde ailleurs", labels=["Idée", "profs"], author="theo.wu",
-          created=ago(days=8), updated=ago(days=8))  # fmt: skip
-    issue(24, "Distributeur de café qui redonne de l'endurance", labels=["Idée", "gameplay"],
-          author="louis.landanger", created=ago(days=5), updated=ago(days=5))  # fmt: skip
-    issue(25, "Mode photo pour la soutenance", labels=["Idée", "ui"], author="eliott.damagnez",
-          created=ago(hours=6), updated=ago(hours=6))  # fmt: skip
+    issue(
+        8,
+        "Plan de l'étage relevé et mis au propre",
+        labels=["3d"],
+        author="samuel.mopty",
+        assignees=["samuel.mopty"],
+        milestone=soutenance,
+        created=ago(days=20),
+        updated=ago(hours=15.5),
+        closed=ago(hours=15.5),
+    )
+    issue(
+        9,
+        "Modéliser le couloir principal de l'étage",
+        labels=["En cours", "3d"],
+        author="samuel.mopty",
+        assignees=["samuel.mopty"],
+        milestone=soutenance,
+        created=ago(days=12),
+        updated=ago(hours=5),
+    )
+    issue(
+        11,
+        "Prototype de la scène Panda3D",
+        labels=["code"],
+        author="louis.landanger",
+        assignees=["louis.landanger"],
+        milestone=soutenance,
+        created=ago(days=18),
+        updated=ago(days=2),
+        closed=ago(days=2),
+    )
+    issue(
+        12,
+        "Déplacements du joueur et collisions",
+        labels=["À faire", "gameplay"],
+        author="arthur.jeaugey",
+        milestone=soutenance,
+        created=ago(days=15),
+        updated=ago(days=6),
+    )
+    issue(
+        14,
+        "IA de poursuite : le prof suit le joueur dans les couloirs",
+        labels=["En cours", "profs"],
+        author="theo.wu",
+        assignees=["theo.wu"],
+        milestone=soutenance,
+        created=ago(days=14),
+        updated=ago(hours=4.75),
+        description=DESCRIPTION_14,
+        notes=2,
+        tasks=(2, 3),
+    )
+    issue(
+        17,
+        "Menu principal et écran de pause",
+        labels=["En cours", "ui"],
+        author="eliott.damagnez",
+        assignees=["eliott.damagnez"],
+        milestone=soutenance,
+        created=ago(days=21),
+        updated=ago(days=16, hours=3),
+    )
+    issue(
+        18,
+        "Bruits de pas selon la surface",
+        labels=["À faire", "son"],
+        author="samuel.mopty",
+        milestone=soutenance,
+        created=ago(days=10),
+        updated=ago(days=7),
+    )
+    issue(
+        19,
+        "Lampe torche avec batterie",
+        labels=["À faire", "gameplay"],
+        author="theo.wu",
+        milestone=soutenance,
+        created=ago(days=9),
+        updated=ago(days=9),
+    )
+    issue(
+        20,
+        "Plan du CdST validé en groupe",
+        labels=["orga"],
+        author="arthur.jeaugey",
+        assignees=["arthur.jeaugey"],
+        milestone=cdst,
+        created=ago(days=11),
+        updated=ago(days=4),
+        closed=ago(days=4),
+    )
+    issue(
+        21,
+        "Rédiger la section « Répartition des tâches » du CdST",
+        labels=["En cours", "orga"],
+        author="arthur.jeaugey",
+        assignees=["arthur.jeaugey"],
+        milestone=cdst,
+        created=ago(days=6),
+        updated=ago(days=1),
+    )
+    issue(
+        22,
+        "Relire et mettre en page le CdST",
+        labels=["À faire", "orga"],
+        author="arthur.jeaugey",
+        milestone=cdst,
+        created=ago(days=6),
+        updated=ago(days=5),
+    )
+    issue(
+        23,
+        "Un prof qui n'apparaît que si on regarde ailleurs",
+        labels=["Idée", "profs"],
+        author="theo.wu",
+        created=ago(days=8),
+        updated=ago(days=8),
+    )
+    issue(
+        24,
+        "Distributeur de café qui redonne de l'endurance",
+        labels=["Idée", "gameplay"],
+        author="louis.landanger",
+        created=ago(days=5),
+        updated=ago(days=5),
+    )
+    issue(
+        25,
+        "Mode photo pour la soutenance",
+        labels=["Idée", "ui"],
+        author="eliott.damagnez",
+        created=ago(hours=6),
+        updated=ago(hours=6),
+    )
     # Créée directement dans GitLab, sans colonne ni domaine : elle doit apparaître « à trier ».
-    issue(26, "Musique d'ambiance qui s'accélère pendant une poursuite", labels=[], author="samuel.mopty",
-          created=ago(days=1, hours=2), updated=ago(days=1, hours=2))  # fmt: skip
+    issue(
+        26,
+        "Musique d'ambiance qui s'accélère pendant une poursuite",
+        labels=[],
+        author="samuel.mopty",
+        created=ago(days=1, hours=2),
+        updated=ago(days=1, hours=2),
+    )
 
     def note(note_id: int, author: str, body: str, created: str, *, system: bool = False) -> dict[str, Any]:
         return {
@@ -249,12 +380,25 @@ def build_state(base_url: str, now: datetime | None = None) -> State:
 
     state.notes[14] = [
         note(401, "theo.wu", "assigned to @theo.wu", ago(days=14), system=True),
-        note(402, "louis.landanger", "Je relis !7 ce soir. Le prof traverse encore la porte de la salle 204.", ago(hours=5.3)),
+        note(
+            402,
+            "louis.landanger",
+            "Je relis !7 ce soir. Le prof traverse encore la porte de la salle 204.",
+            ago(hours=5.3),
+        ),
         note(403, "theo.wu", "Vu, la grille est mal alignée à cet endroit. Je corrige.", ago(hours=4.75)),
-    ]  # fmt: skip
+    ]
 
     def merge_request(
-        iid: int, title: str, *, author: str, reviewer: str, branch: str, created: str, updated: str, closes: int
+        iid: int,
+        title: str,
+        *,
+        author: str,
+        reviewer: str,
+        branch: str,
+        created: str,
+        updated: str,
+        closes: int,
     ) -> None:
         state.merge_requests[iid] = {
             "id": 50000 + iid,
@@ -280,10 +424,26 @@ def build_state(base_url: str, now: datetime | None = None) -> State:
         state.closes[iid] = [closes]
         state.approvals[iid] = []
 
-    merge_request(7, "Poursuite : pathfinding sur la grille des couloirs", author="theo.wu", reviewer="louis.landanger",
-                  branch="feat/14-ia-de-poursuite", created=ago(days=3, hours=2), updated=ago(hours=17), closes=14)  # fmt: skip
-    merge_request(8, "Couloir principal : maillage et textures", author="samuel.mopty", reviewer="arthur.jeaugey",
-                  branch="feat/9-couloir-principal", created=ago(hours=5), updated=ago(hours=5), closes=9)  # fmt: skip
+    merge_request(
+        7,
+        "Poursuite : pathfinding sur la grille des couloirs",
+        author="theo.wu",
+        reviewer="louis.landanger",
+        branch="feat/14-ia-de-poursuite",
+        created=ago(days=3, hours=2),
+        updated=ago(hours=17),
+        closes=14,
+    )
+    merge_request(
+        8,
+        "Couloir principal : maillage et textures",
+        author="samuel.mopty",
+        reviewer="arthur.jeaugey",
+        branch="feat/9-couloir-principal",
+        created=ago(hours=5),
+        updated=ago(hours=5),
+        closes=9,
+    )
 
     last_sha = "a3f9c2e1" + "5b" * 16
     state.commits = [
@@ -300,7 +460,9 @@ def build_state(base_url: str, now: datetime | None = None) -> State:
         }
     ]
 
-    def event(event_id: int, action: str, target_type: str | None, username: str, created: str, **extra: Any) -> dict:
+    def event(
+        event_id: int, action: str, target_type: str | None, username: str, created: str, **extra: Any
+    ) -> dict:
         return {
             "id": event_id,
             "project_id": PROJECT_ID,
@@ -313,23 +475,109 @@ def build_state(base_url: str, now: datetime | None = None) -> State:
         }
 
     state.events = [
-        event(906, "commented on", "Note", "theo.wu", ago(hours=4.75), target_title=state.issues[14]["title"],
-              note={"noteable_type": "Issue", "noteable_iid": 14, "body": "Vu, la grille est mal alignée."}),  # fmt: skip
-        event(905, "opened", "MergeRequest", "samuel.mopty", ago(hours=5), target_iid=8,
-              target_title=state.merge_requests[8]["title"]),  # fmt: skip
-        event(904, "commented on", "Note", "louis.landanger", ago(hours=5.3), target_title=state.issues[14]["title"],
-              note={"noteable_type": "Issue", "noteable_iid": 14, "body": "Je relis !7 ce soir."}),  # fmt: skip
-        event(903, "opened", "Issue", "eliott.damagnez", ago(hours=6), target_iid=25, target_title=state.issues[25]["title"]),
-        event(902, "closed", "Issue", "samuel.mopty", ago(hours=15.5), target_iid=8, target_title=state.issues[8]["title"]),
-        event(901, "pushed to", None, "theo.wu", ago(hours=17),
-              push_data={"commit_count": 2, "action": "pushed", "ref_type": "branch",
-                         "ref": "feat/14-ia-de-poursuite", "commit_title": "Corrige l'alignement de la grille"}),  # fmt: skip
-        event(900, "opened", "Issue", "samuel.mopty", ago(days=1, hours=2), target_iid=26, target_title=state.issues[26]["title"]),
-        event(899, "accepted", "MergeRequest", "arthur.jeaugey", ago(days=2), target_iid=6,
-              target_title="Prototype de la scène Panda3D"),  # fmt: skip
-        event(898, "closed", "Issue", "louis.landanger", ago(days=2), target_iid=11, target_title=state.issues[11]["title"]),
-        event(897, "opened", "MergeRequest", "theo.wu", ago(days=3, hours=2), target_iid=7,
-              target_title=state.merge_requests[7]["title"]),  # fmt: skip
-        event(896, "closed", "Issue", "arthur.jeaugey", ago(days=4), target_iid=20, target_title=state.issues[20]["title"]),
-    ]  # fmt: skip
+        event(
+            906,
+            "commented on",
+            "Note",
+            "theo.wu",
+            ago(hours=4.75),
+            target_title=state.issues[14]["title"],
+            note={"noteable_type": "Issue", "noteable_iid": 14, "body": "Vu, la grille est mal alignée."},
+        ),
+        event(
+            905,
+            "opened",
+            "MergeRequest",
+            "samuel.mopty",
+            ago(hours=5),
+            target_iid=8,
+            target_title=state.merge_requests[8]["title"],
+        ),
+        event(
+            904,
+            "commented on",
+            "Note",
+            "louis.landanger",
+            ago(hours=5.3),
+            target_title=state.issues[14]["title"],
+            note={"noteable_type": "Issue", "noteable_iid": 14, "body": "Je relis !7 ce soir."},
+        ),
+        event(
+            903,
+            "opened",
+            "Issue",
+            "eliott.damagnez",
+            ago(hours=6),
+            target_iid=25,
+            target_title=state.issues[25]["title"],
+        ),
+        event(
+            902,
+            "closed",
+            "Issue",
+            "samuel.mopty",
+            ago(hours=15.5),
+            target_iid=8,
+            target_title=state.issues[8]["title"],
+        ),
+        event(
+            901,
+            "pushed to",
+            None,
+            "theo.wu",
+            ago(hours=17),
+            push_data={
+                "commit_count": 2,
+                "action": "pushed",
+                "ref_type": "branch",
+                "ref": "feat/14-ia-de-poursuite",
+                "commit_title": "Corrige l'alignement de la grille",
+            },
+        ),
+        event(
+            900,
+            "opened",
+            "Issue",
+            "samuel.mopty",
+            ago(days=1, hours=2),
+            target_iid=26,
+            target_title=state.issues[26]["title"],
+        ),
+        event(
+            899,
+            "accepted",
+            "MergeRequest",
+            "arthur.jeaugey",
+            ago(days=2),
+            target_iid=6,
+            target_title="Prototype de la scène Panda3D",
+        ),
+        event(
+            898,
+            "closed",
+            "Issue",
+            "louis.landanger",
+            ago(days=2),
+            target_iid=11,
+            target_title=state.issues[11]["title"],
+        ),
+        event(
+            897,
+            "opened",
+            "MergeRequest",
+            "theo.wu",
+            ago(days=3, hours=2),
+            target_iid=7,
+            target_title=state.merge_requests[7]["title"],
+        ),
+        event(
+            896,
+            "closed",
+            "Issue",
+            "arthur.jeaugey",
+            ago(days=4),
+            target_iid=20,
+            target_title=state.issues[20]["title"],
+        ),
+    ]
     return state

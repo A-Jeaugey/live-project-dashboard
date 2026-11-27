@@ -55,6 +55,8 @@ def create_app(
     logging.basicConfig(
         level=settings.log_level.upper(), format="%(asctime)s %(levelname)s %(name)s : %(message)s"
     )
+    # httpx journalise chaque requête : avec l'interrogation périodique, cela noierait le reste.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

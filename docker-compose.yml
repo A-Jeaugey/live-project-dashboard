@@ -1,0 +1,45 @@
+# Lancement : copier .env.example vers .env, le remplir, puis `docker compose up -d`.
+#
+# Deux conteneurs :
+#   app          le serveur (API, flux temps réel, interface compilée)
+#   cloudflared  le tunnel Cloudflare qui expose `app` en HTTPS, sans ouvrir de port sur la box
+#
+# Dans le tableau de bord Cloudflare (Zero Trust → Networks → Tunnels), le nom d'hôte public du
+# tunnel doit pointer vers le service  http://app:8000
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+      FRONTEND_DIST: /srv/frontend/dist
+      PROJECT_CONFIG: /srv/config/projet.toml
+    volumes:
+      - data:/data
+      # Les réglages du projet se modifient sans reconstruire l'image (redémarrer `app` ensuite).
+      - ./config:/srv/config:ro
+    ports:
+      # Accès local seulement (diagnostic, ou reverse proxy installé sur la machine).
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN manque dans .env}
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  data:

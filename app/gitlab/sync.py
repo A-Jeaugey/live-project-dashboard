@@ -350,7 +350,15 @@ class Synchronizer:
 
     def _rebuild(self) -> None:
         """Reconstruit l'instantané ; la version n'augmente que si son contenu a changé."""
-        snapshot = self._build(self._clock())
+        now = self._clock()
+        try:
+            snapshot = self._build(now)
+        except Exception:
+            # Une réponse de GitLab que l'on ne sait pas lire ne doit ni planter le serveur ni
+            # vider l'écran : on garde le dernier instantané et on signale le problème.
+            log.exception("Instantané impossible à construire : le précédent est conservé")
+            self._ok, self._last_error = False, INTERNAL_ERROR
+            snapshot = self._snapshot.model_copy(update={"sync": self._status(now), "generated_at": now})
         content = snapshot.model_dump_json(exclude={"version", "generated_at", "sync"})
         state = f"{snapshot.sync.mode}|{snapshot.sync.ok}|{snapshot.sync.last_error}"
         digest = hashlib.sha256(f"{content}|{state}".encode()).hexdigest()

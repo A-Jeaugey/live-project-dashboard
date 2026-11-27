@@ -45,8 +45,18 @@ def build_oauth(settings: Settings) -> OAuth:
 
 
 def safe_next(value: str | None) -> str:
-    """Chemin de retour après connexion : uniquement un chemin interne, jamais une autre adresse."""
-    if value and value.startswith("/") and not value.startswith("//") and "\\" not in value:
+    """Chemin de retour après connexion : uniquement un chemin interne, jamais une autre adresse.
+
+    Les espaces et caractères de contrôle sont refusés : un navigateur les supprime, ce qui
+    transformerait « /<tabulation>/ailleurs » en « //ailleurs », donc en une adresse externe.
+    """
+    if (
+        value
+        and value.startswith("/")
+        and not value.startswith("//")
+        and "\\" not in value
+        and not any(char.isspace() or not char.isprintable() for char in value)
+    ):
         return value
     return "/"
 

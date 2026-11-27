@@ -159,7 +159,7 @@ export function IssueSheet() {
                 {deadline ? (
                   <>
                     {deadline.night !== null && `Nuit ${deadline.night} · `}
-                    {deadline.title} <span className="mono text-faint">· {countdown(deadline.days_left)}</span>
+                    {deadline.title} <span className="mono text-faint">· {countdown(deadline)}</span>
                   </>
                 ) : issue.milestone ? (
                   issue.milestone.title

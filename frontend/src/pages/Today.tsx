@@ -36,7 +36,7 @@ function Cartouche({ next }: { next: Deadline | undefined }) {
               semaine du {dayMonth(next.week_of)}
             </div>
             <h1 className="display mt-2 text-[44px] md:text-[62px]">
-              <span className="ruler">{next.short_title}</span>
+              <span className="ruler">{next.title}</span>
             </h1>
             <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
               {next.milestone ? (
@@ -56,8 +56,11 @@ function Cartouche({ next }: { next: Deadline | undefined }) {
           </div>
           <div className="grade flex items-center justify-between gap-4 px-5 py-3 sm:flex-col sm:justify-center sm:gap-2 sm:p-4 sm:text-center">
             <span className="label sm:self-start">Reste</span>
-            <span className="hand hand-pen text-[46px] sm:text-[58px] md:text-[66px]" style={{ transform: "rotate(-4deg)" }}>
-              <Circled>{countdown(next.days_left)}</Circled>
+            <span
+              className={`hand hand-pen ${countdown(next).length > 6 ? "text-[28px] md:text-[32px]" : "text-[46px] sm:text-[58px] md:text-[66px]"}`}
+              style={{ transform: "rotate(-4deg)" }}
+            >
+              <Circled>{countdown(next)}</Circled>
             </span>
             <span className="mono max-w-[9rem] text-right text-[11.5px] text-faint sm:max-w-none sm:text-center">
               jusqu'au lundi {dayMonth(next.target_date)}
@@ -87,10 +90,10 @@ function Frise({ next }: { next: Deadline | undefined }) {
             <Link to={`/echeances?e=${d.key}`} className="block text-ink no-underline hover:no-underline">
               <span className={`hand text-[1.3rem] ${current ? "hand-pen" : "text-soft"}`}>nuit {d.night}</span>
               <span className="block leading-tight font-semibold">
-                {current ? <span className="marker">{d.short_title}</span> : d.short_title}
+                {current ? <span className="marker">{d.title}</span> : d.title}
               </span>
               <span className="mono mt-1 block text-faint">
-                {shortDate(d.week_of)} · {countdown(d.days_left)}
+                {shortDate(d.week_of)} · {countdown(d)}
               </span>
             </Link>
             {d.past && (
@@ -158,7 +161,7 @@ function Mine() {
                   ))}
                   {deadline && (
                     <span>
-                      {deadline.short_title} · {countdown(deadline.days_left)}
+                      {deadline.short_title} · {countdown(deadline)}
                     </span>
                   )}
                   {issue.stale_days !== null && (
@@ -313,8 +316,7 @@ export function ActivityRow({ item }: { item: Activity }) {
       </span>
       <div className="body">
         <span>
-          <strong className="font-semibold">{item.actor ? m.first(item.actor) : (item.actor_name ?? "Quelqu'un")}</strong>{" "}
-          {activityVerb(item)}{" "}
+          <strong className="font-semibold">{m.who(item)}</strong> {activityVerb(item)}{" "}
           {issue ? (
             <IssueLink issue={issue} className="font-normal" />
           ) : target?.title ? (
@@ -414,6 +416,9 @@ export function Today() {
   const { snap, now } = m;
   const next = m.nextDeadline;
 
+  const attention =
+    snap.issues.length === 0 ? snap.attention.filter((a) => a.kind !== "member_idle") : snap.attention;
+
   const since = previousVisit();
   const recent = since === null ? [] : snap.activity.filter((a) => Date.parse(a.at) > since);
   const news = (since === null ? snap.activity : recent).slice(0, 8);
@@ -441,13 +446,13 @@ export function Today() {
 
           <Section numeral="II" title="À surveiller">
             <ul className="ruled">
-              {snap.attention.length === 0 ? (
+              {attention.length === 0 ? (
                 <li>
                   <span className="gutter" />
                   <span className="body text-soft">{EMPTY.attention}</span>
                 </li>
               ) : (
-                snap.attention.map((item, index) => <AttentionRow key={index} item={item} />)
+                attention.map((item, index) => <AttentionRow key={index} item={item} />)
               )}
             </ul>
           </Section>

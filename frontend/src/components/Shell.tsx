@@ -3,7 +3,7 @@ import { Link, NavLink } from "react-router";
 import { agoPrecise } from "../lib/format";
 import { useLive } from "../lib/live";
 import { useModel, useNow } from "../lib/model";
-import { activityVerb } from "../lib/voice";
+import { activityVerb, COLUMN_NAMES } from "../lib/voice";
 import { InkFilter, Photo } from "./bits";
 
 const NAV = [
@@ -69,21 +69,34 @@ function LiveNotes() {
       aria-live="polite"
       className="pointer-events-none fixed bottom-[72px] left-4 z-30 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2 md:bottom-6 md:left-6"
     >
-      {news.map((item, index) => (
+      {news.map((note, index) => (
         <div
-          key={item.id}
+          key={note.id}
           className="fiche note-in pointer-events-auto px-4 py-3 text-[14px]"
           style={{ transform: `rotate(${index % 2 === 0 ? -0.8 : 0.6}deg)` }}
         >
-          <strong className="font-semibold">{item.actor ? m.first(item.actor) : (item.actor_name ?? "Quelqu'un")}</strong>{" "}
-          {activityVerb(item)}{" "}
-          {item.target?.iid != null && (
-            <span className="mono text-faint">
-              {item.target.type === "merge_request" ? "!" : "#"}
-              {item.target.iid}{" "}
-            </span>
+          {note.kind === "activity" ? (
+            <>
+              <strong className="font-semibold">{m.who(note.activity)}</strong> {activityVerb(note.activity)}{" "}
+              {note.activity.target?.iid != null && (
+                <span className="mono text-faint">
+                  {note.activity.target.type === "merge_request" ? "!" : "#"}
+                  {note.activity.target.iid}{" "}
+                </span>
+              )}
+              {note.activity.target?.title}
+            </>
+          ) : (
+            <>
+              {note.by ? (
+                <>
+                  <strong className="font-semibold">{m.first(note.by)}</strong> a pris{" "}
+                </>
+              ) : null}
+              <span className="mono text-faint">#{note.iid}</span> {note.title}
+              {!note.by && <> passe dans « {COLUMN_NAMES[note.column]} »</>}
+            </>
           )}
-          {item.target?.title}
         </div>
       ))}
     </div>

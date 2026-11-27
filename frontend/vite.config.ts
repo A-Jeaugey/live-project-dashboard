@@ -1,8 +1,24 @@
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, type Plugin, type ProxyOptions } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 const backend = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
+
+const PROXIED = ["/api", "/auth", "/hooks", "/healthz"];
+
+/**
+ * Le serveur Python doit voir l'adresse que le navigateur a réellement appelée (en-tête Host) :
+ * en développement, il en déduit l'adresse de retour donnée à GitLab pour la connexion.
+ */
+const toBackend: ProxyOptions = {
+  target: backend,
+  changeOrigin: false,
+  configure: (proxy) => {
+    proxy.on("proxyReq", (proxyReq, req) => {
+      if (req.headers.host) proxyReq.setHeader("host", req.headers.host);
+    });
+  },
+};
 
 /**
  * `npm run dev:mock` : sert des données d'exemple à la place du serveur Python,
@@ -47,8 +63,6 @@ export default defineConfig({
   server: {
     host: "127.0.0.1",
     port: 5173,
-    proxy: process.env.MOCK
-      ? undefined
-      : { "/api": backend, "/auth": backend, "/hooks": backend, "/healthz": backend },
+    proxy: process.env.MOCK ? undefined : Object.fromEntries(PROXIED.map((path) => [path, toBackend])),
   },
 });

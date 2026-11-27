@@ -74,8 +74,21 @@ async def test_le_chemin_de_retour_est_conserve_mais_jamais_externe(harness):
 
 def test_safe_next():
     assert safe_next("/echeances") == "/echeances"
-    for bad in [None, "", "tableau", "//x", "/\\x", "http://x", "javascript:alert(1)"]:
-        assert safe_next(bad) == "/"
+    assert safe_next("/tableau?qui=theo.wu&t=14") == "/tableau?qui=theo.wu&t=14"
+    for bad in (
+        None,
+        "",
+        "https://ailleurs.example",
+        "//ailleurs.example",
+        "/\\ailleurs.example",
+        "tableau",
+        # Un navigateur supprime tabulations et retours à la ligne : « /\t/x » deviendrait « //x ».
+        "/\t/ailleurs.example",
+        "/\n/ailleurs.example",
+        "/ /ailleurs.example",
+        "/\x00tableau",
+    ):
+        assert safe_next(bad) == "/", bad
 
 
 async def test_un_non_membre_est_refuse(harness):
