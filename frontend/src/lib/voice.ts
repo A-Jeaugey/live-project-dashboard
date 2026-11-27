@@ -1,4 +1,4 @@
-// La voix du carnet : celle d'un prof principal qui annote la copie du groupe.
+// La voix du poste de nuit : des consignes courtes, comme sur une main courante.
 // Tout est calculé à partir de l'instantané, sans aucune IA.
 
 import { duration, list, plural } from "./format";
@@ -12,11 +12,11 @@ export const COLUMN_NAMES: Record<ColumnKey, string> = {
   done: "Fait",
 };
 
-/** L'appréciation générale, en tête de copie : une à trois phrases, les plus urgentes d'abord. */
-export function appreciation(m: Model): string {
+/** La consigne de la nuit : une à trois phrases, les plus urgentes d'abord. */
+export function briefing(m: Model): string {
   const { snap } = m;
   if (snap.issues.length === 0) {
-    return "Copie blanche. Aucune tâche dans GitLab pour l'instant.";
+    return "Étage désert. Aucune tâche dans GitLab pour l'instant.";
   }
 
   const remarks: string[] = [];
@@ -33,7 +33,7 @@ export function appreciation(m: Model): string {
 
   const late = snap.attention.find((a) => a.kind === "mr_waiting" && a.hours >= snap.settings.review_hours);
   if (late?.kind === "mr_waiting") {
-    const who = late.reviewers.length ? ` ${list(late.reviewers.map(m.first))}, au tableau.` : "";
+    const who = late.reviewers.length ? ` ${list(late.reviewers.map(m.first))} est attendu.` : "";
     remarks.push(`La !${late.mr} attend une relecture depuis ${duration(late.hours)}.${who}`);
   }
 
@@ -47,21 +47,21 @@ export function appreciation(m: Model): string {
     remarks.push(`${list(idle)} ${idle.length > 1 ? "n'ont" : "n'a"} rien en cours.`);
   }
 
-  if (remarks.length === 0) return "Rien à signaler. Continuez comme ça.";
+  if (remarks.length === 0) return "Rien à signaler. La nuit est calme.";
   return remarks.slice(0, 3).join(" ");
 }
 
-/** Le mot écrit en rouge dans la marge, en face de ce qui demande de l'attention. */
-export function marginNote(a: Attention, reviewHours: number): string {
+/** La valeur affichée en tête d'une alerte : une durée, ou un mot. */
+export function alertKey(a: Attention): string {
   switch (a.kind) {
     case "mr_waiting":
-      return a.hours >= reviewHours ? `${duration(a.hours)} !` : duration(a.hours);
+      return duration(a.hours);
     case "issue_stale":
       return `${a.days} j`;
     case "member_idle":
       return "libre";
     case "needs_triage":
-      return "à trier";
+      return "tri";
     case "inconsistent":
       return "à revoir";
     case "pipeline_failed":

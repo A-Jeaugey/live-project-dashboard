@@ -55,7 +55,7 @@ essai dans un navigateur (les trois serveurs de dev lancés).
 
 - `frontend/src/lib/types.ts` est le contrat entre le serveur et l'interface ; `app/core/models.py` en est le
   miroir. Les deux se modifient ensemble.
-- Les classes CSS du carnet vivent dans `@layer components` de `frontend/src/styles.css` : hors de cette couche,
+- Les classes CSS de l'interface vivent dans `@layer components` de `frontend/src/styles.css` : hors de cette couche,
   elles écraseraient les utilitaires Tailwind.
 - Le serveur pose une politique de sécurité (CSP) qui interdit les scripts écrits dans la page : tout script passe
   par un fichier.

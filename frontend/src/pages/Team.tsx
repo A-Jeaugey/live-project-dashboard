@@ -1,71 +1,78 @@
 import { Link } from "react-router";
-import { IssueLink, OutLink, PageTitle, Photo, Section } from "../components/bits";
+import { Agent, IssueLink, OutLink, PageHead, Pane } from "../components/bits";
 import { ago, countdown, duration, plural } from "../lib/format";
 import { useModel } from "../lib/model";
+import { roomOf } from "../lib/rooms";
 
-/** L'équipe, présentée comme une feuille d'appel : qui est « présent » au tableau, et sur quoi. */
+/** L'équipe : qui est en poste, dans quelle salle, sur quoi. */
 export function Team() {
   const m = useModel();
   const { snap, now } = m;
+  const domains = snap.domains.map((d) => d.name);
 
   const rows = snap.members.map((member) => {
-    const mine = (username: string[]) => username.includes(member.username);
+    const mine = (usernames: string[]) => usernames.includes(member.username);
+    const doing = snap.issues.filter((i) => i.column === "doing" && mine(i.assignees));
+    const where = doing[0]?.domains.find((d) => domains.includes(d));
     return {
       member,
-      doing: snap.issues.filter((i) => i.column === "doing" && mine(i.assignees)),
-      reviews: snap.merge_requests.filter(
-        (mr) => mr.waiting_review && mine(mr.reviewers) && !mine(mr.approved_by),
-      ),
+      doing,
+      room: doing.length === 0 ? null : where ? roomOf(where) : "Sans salle",
+      reviews: snap.merge_requests.filter((mr) => mr.waiting_review && mine(mr.reviewers) && !mine(mr.approved_by)),
       authored: snap.merge_requests.filter((mr) => mr.author === member.username),
       done: snap.issues.filter((i) => m.isRecentlyDone(i) && mine(i.assignees)).length,
       lastSeen: snap.activity.find((a) => a.actor === member.username)?.at ?? null,
     };
   });
 
-  const present = rows.filter((r) => r.doing.length > 0).length;
+  const posted = rows.filter((r) => r.doing.length > 0).length;
+  const loose = rows.length - posted;
   const asleep = snap.issues
     .filter((i) => i.stale_days !== null)
     .sort((a, b) => (b.stale_days ?? 0) - (a.stale_days ?? 0));
   const free = snap.issues.filter((i) => i.column === "todo" && i.assignees.length === 0);
 
   return (
-    <div className="space-y-10 px-5 py-7 md:px-10 md:py-10">
-      <PageTitle title="Feuille d'appel">
-        {present} {plural(present, "présent", "présents")} sur {rows.length}
-      </PageTitle>
+    <div className="space-y-10 py-8 md:py-10">
+      <PageHead title="Équipe" kicker="03 · QUI EST OÙ, ET SUR QUOI">
+        {String(posted).padStart(2, "0")} EN POSTE
+        {loose > 0 && (
+          <>
+            {" · "}
+            <span className="text-warn">{String(loose).padStart(2, "0")} DANS LE COULOIR</span>
+          </>
+        )}
+      </PageHead>
 
-      <ul className="m-0 list-none space-y-4 p-0 md:hidden">
-        {rows.map(({ member, doing, reviews, done, lastSeen }) => (
-          <li key={member.username} className="border-[1.5px] border-ink p-4">
+      {/* Téléphone : une fiche par membre. */}
+      <ul className="list-none space-y-3 p-0 md:hidden">
+        {rows.map(({ member, doing, room, reviews, done, lastSeen }) => (
+          <li key={member.username} className="border border-line2 p-4">
             <div className="flex items-center gap-3">
-              <Photo username={member.username} size={44} />
-              <div className="min-w-0 flex-1 leading-tight">
-                <div className="font-semibold">{member.first_name}</div>
-                <div className="mono text-[11.5px] text-faint">
-                  {lastSeen ? `vu ${ago(lastSeen, now)}` : "pas d'activité récente"} · {done} rendu
-                </div>
+              <Agent username={member.username} size={40} />
+              <div className="min-w-0 flex-1">
+                <div className="x text-[17px] normal-case">{member.first_name}</div>
+                <div className={`c mt-1 text-[12px] ${room ? "text-go" : "text-warn"}`}>{room ?? "Dans le couloir"}</div>
               </div>
-              {doing.length > 0 ? (
-                <span className="ticks" aria-label="présent">
-                  <span className="tick" data-state="done" style={{ width: 20, height: 20 }} />
-                </span>
-              ) : (
-                <span className="hand hand-pen tilt text-[1.4rem]">absent</span>
-              )}
+              <div className="m text-right text-faint">
+                {done} rendu
+                <br />
+                {lastSeen ? ago(lastSeen, now) : "—"}
+              </div>
             </div>
-            <ul className="m-0 mt-3 list-none space-y-2 border-t border-rule p-0 pt-3">
+            <ul className="mt-3 list-none space-y-2 border-t border-line p-0 pt-3">
               {doing.map((issue) => (
                 <li key={issue.iid}>
                   <IssueLink issue={issue} />
-                  {issue.stale_days !== null && (
-                    <span className="hand hand-pen block text-[1.2rem]">{issue.stale_days} j. sans nouvelles</span>
-                  )}
+                  {issue.stale_days !== null && <span className="m block text-warn">{issue.stale_days} j sans nouvelles</span>}
                 </li>
               ))}
-              {doing.length === 0 && <li className="text-soft">rien en cours</li>}
+              {doing.length === 0 && <li className="text-dim">rien en cours</li>}
               {reviews.map((mr) => (
-                <li key={mr.iid} className="text-[14px]">
-                  <span className={mr.overdue ? "text-pen" : "text-soft"}>à relire · {duration(mr.waiting_hours ?? 0)} · </span>
+                <li key={mr.iid}>
+                  <span className={`m ${mr.overdue ? "text-alarm" : "text-faint"}`}>
+                    À RELIRE · {duration(mr.waiting_hours ?? 0)} ·{" "}
+                  </span>
                   <OutLink href={mr.web_url} refText={`!${mr.iid}`} className="font-normal">
                     de {m.first(mr.author)}
                   </OutLink>
@@ -77,64 +84,58 @@ export function Team() {
       </ul>
 
       <div className="hidden md:block">
-        <table className="form-table">
+        <table className="grid-table">
           <thead>
             <tr>
-              <th scope="col" className="label w-[190px]">
-                Élève
+              <th scope="col" className="c w-[210px]">
+                Membre
               </th>
-              <th scope="col" className="label w-[112px]">
-                Présent
+              <th scope="col" className="c w-[170px]">
+                Salle
               </th>
-              <th scope="col" className="label">
+              <th scope="col" className="c">
                 En cours
               </th>
-              <th scope="col" className="label w-[230px]">
+              <th scope="col" className="c w-[210px]">
                 À relire
               </th>
-              <th scope="col" className="label w-[124px] whitespace-nowrap">
+              <th scope="col" className="c w-[110px] whitespace-nowrap">
                 Rendu · {snap.settings.done_window_days} j
               </th>
-              <th scope="col" className="label w-[124px]">
+              <th scope="col" className="c w-[110px]">
                 Vu
               </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map(({ member, doing, reviews, authored, done, lastSeen }) => (
+            {rows.map(({ member, doing, room, reviews, authored, done, lastSeen }) => (
               <tr key={member.username}>
                 <th scope="row" className="font-normal">
                   <span className="flex items-center gap-3">
-                    <Photo username={member.username} size={40} />
-                    <span className="leading-tight">
-                      <span className="block font-semibold">{member.first_name}</span>
-                      <span className="mono text-[11.5px] text-faint">{member.username}</span>
+                    <Agent username={member.username} size={36} />
+                    <span>
+                      <span className="x block text-[16px] normal-case">{member.first_name}</span>
+                      <span className="m mt-1 block text-faint">{member.username}</span>
                     </span>
                   </span>
                 </th>
                 <td>
-                  {doing.length > 0 ? (
-                    <span className="ticks" aria-label="présent">
-                      <span className="tick" data-state="done" style={{ width: 20, height: 20 }} />
-                    </span>
-                  ) : (
-                    <span className="hand hand-pen tilt text-[1.4rem]">absent</span>
-                  )}
+                  <span className={`c ${room ? "text-go" : "text-warn"}`}>{room ?? "Dans le couloir"}</span>
                 </td>
                 <td>
                   {doing.length > 0 ? (
-                    <ul className="m-0 list-none space-y-1.5 p-0">
+                    <ul className="list-none space-y-1.5 p-0">
                       {doing.map((issue) => (
                         <li key={issue.iid}>
                           <IssueLink issue={issue} />
                           {issue.stale_days !== null && (
-                            <span className="hand hand-pen ml-3 text-[1.2rem]">{issue.stale_days} j. sans nouvelles</span>
+                            <span className="m ml-3 text-warn">{issue.stale_days} J SANS NOUVELLES</span>
                           )}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <span className="text-soft">
+                    <span className="text-dim">
                       rien en cours
                       {free.length > 0 && (
                         <>
@@ -147,11 +148,10 @@ export function Team() {
                     </span>
                   )}
                   {authored.length > 0 && (
-                    <div className="mt-1.5 text-[13px] text-soft">
+                    <div className="m mt-2 text-faint">
                       {authored.map((mr) => (
-                        <span key={mr.iid} className="mr-3">
-                          <span className="mono">!{mr.iid}</span>{" "}
-                          {mr.draft ? "en brouillon" : mr.waiting_review ? "en relecture" : "approuvée"}
+                        <span key={mr.iid} className="mr-4">
+                          !{mr.iid} {mr.draft ? "brouillon" : mr.waiting_review ? "en relecture" : "approuvée"}
                         </span>
                       ))}
                     </div>
@@ -159,15 +159,14 @@ export function Team() {
                 </td>
                 <td>
                   {reviews.length > 0 ? (
-                    <ul className="m-0 list-none space-y-1.5 p-0 text-[14px]">
+                    <ul className="list-none space-y-1.5 p-0">
                       {reviews.map((mr) => (
                         <li key={mr.iid}>
                           <OutLink href={mr.web_url} refText={`!${mr.iid}`} className="font-normal">
                             de {m.first(mr.author)}
                           </OutLink>
-                          <span className={`ml-2 ${mr.overdue ? "hand hand-pen text-[1.2rem]" : "mono text-faint"}`}>
+                          <span className={`m ml-2 ${mr.overdue ? "text-alarm" : "text-faint"}`}>
                             {duration(mr.waiting_hours ?? 0)}
-                            {mr.overdue && " !"}
                           </span>
                         </li>
                       ))}
@@ -176,60 +175,51 @@ export function Team() {
                     <span className="text-faint">—</span>
                   )}
                 </td>
-                <td className="mono">{done}</td>
-                <td className="mono text-[12.5px] text-soft">{lastSeen ? ago(lastSeen, now) : "—"}</td>
+                <td className="m text-[13px] text-fg">{String(done).padStart(2, "0")}</td>
+                <td className="m text-dim">{lastSeen ? ago(lastSeen, now) : "—"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <div className="grid gap-x-14 gap-y-10 lg:grid-cols-2">
-        <Section numeral="I" title="Tâches qui dorment" aside={`sans activité depuis ${snap.settings.stale_days} jours ou plus`}>
-          <ul className="ruled">
+      <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
+        <Pane n="01" title="Tâches qui dorment" meta={`sans activité depuis ${snap.settings.stale_days} j ou plus`}>
+          {asleep.length > 0 && <div className="hazard" aria-hidden="true" />}
+          <ul className="rows">
             {asleep.length === 0 ? (
               <li>
-                <span className="gutter" />
-                <span className="body text-soft">Aucune. Tout ce qui est en cours bouge.</span>
+                <span className="k m text-go">RAS</span>
+                <span className="text-dim">Tout ce qui est en cours bouge.</span>
               </li>
             ) : (
               asleep.map((issue) => (
                 <li key={issue.iid}>
-                  <span className="gutter">
-                    <span className="hand hand-pen tilt">{issue.stale_days} j</span>
-                  </span>
-                  <div className="body">
-                    <div className="min-w-0 flex-1">
-                      <IssueLink issue={issue} />
-                      <div className="text-[13px] text-soft">
-                        chez {issue.assignees.map(m.first).join(", ") || "personne"}
-                      </div>
-                    </div>
+                  <span className="k x text-[19px] leading-none text-warn">{issue.stale_days} j</span>
+                  <div className="min-w-0">
+                    <IssueLink issue={issue} />
+                    <div className="m mt-1 text-faint">chez {issue.assignees.map(m.first).join(", ") || "personne"}</div>
                   </div>
                 </li>
               ))
             )}
           </ul>
-        </Section>
+        </Pane>
 
-        <Section numeral="II" title="À prendre" aside={`${free.length} sans personne`}>
-          <ul className="ruled">
+        <Pane n="02" title="À prendre" meta={`${String(free.length).padStart(2, "0")} sans personne`}>
+          <ul className="rows">
             {free.length === 0 ? (
               <li>
-                <span className="gutter" />
-                <span className="body text-soft">Rien à prendre : tout ce qui est décidé a quelqu'un.</span>
+                <span className="k m text-faint">—</span>
+                <span className="text-dim">Tout ce qui est décidé a quelqu'un.</span>
               </li>
             ) : (
               free.slice(0, 6).map((issue) => {
                 const deadline = m.deadline(issue.milestone?.deadline_key);
                 return (
                   <li key={issue.iid}>
-                    <span className="gutter">
-                      {deadline && <span className="mono text-[12px] text-faint">{countdown(deadline)}</span>}
-                    </span>
-                    <div className="body">
-                      <IssueLink issue={issue} />
-                    </div>
+                    <span className="k m text-faint">{deadline ? countdown(deadline) : "—"}</span>
+                    <IssueLink issue={issue} />
                   </li>
                 );
               })
@@ -237,10 +227,12 @@ export function Team() {
           </ul>
           {free.length > 6 && (
             <p className="mt-3 text-right">
-              <Link to="/tableau">les {free.length} au tableau</Link>
+              <Link to="/tableau" className="c text-[12px]">
+                Les {free.length} au tableau →
+              </Link>
             </p>
           )}
-        </Section>
+        </Pane>
       </div>
     </div>
   );

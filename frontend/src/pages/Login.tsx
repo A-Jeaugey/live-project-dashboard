@@ -1,19 +1,15 @@
 import type { ReactNode } from "react";
-import { InkFilter, Stamp } from "../components/bits";
 
 function Cover({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh place-items-center p-5">
-      <InkFilter />
-      <main className="sheet w-full max-w-[560px] p-8 md:p-12" style={{ minHeight: 0 }}>
-        {children}
-      </main>
+      <main className="brk w-full max-w-[620px] border border-line2 bg-panel p-8 md:p-12">{children}</main>
     </div>
   );
 }
 
 const REFUSALS: Record<string, string> = {
-  non_membre: "Ce compte GitLab n'est pas membre du projet du jeu. Le carnet est réservé au groupe.",
+  non_membre: "Ce compte GitLab n'est pas membre du projet du jeu. Le poste est réservé au groupe.",
   connexion: "La connexion avec GitLab n'a pas abouti. Réessaie.",
   gitlab: "GitLab ne répond pas pour l'instant. Réessaie dans un moment.",
   configuration: "La connexion n'est pas encore configurée sur le serveur. Préviens Arthur.",
@@ -32,26 +28,24 @@ export function Login() {
   const reason = new URLSearchParams(window.location.search).get("erreur");
   return (
     <Cover>
-      <div className="label">Carnet de bord</div>
-      <h1 className="display mt-3 text-[56px] md:text-[72px]">
-        <span className="ruler">5 Nights</span> at EPITA
+      <div className="m text-go">POSTE DE NUIT · ACCÈS RÉSERVÉ AU GROUPE</div>
+      <h1 className="x mt-5 text-[clamp(44px,9vw,84px)]">
+        5 Nights
+        <br />
+        at EPITA
       </h1>
-      <p className="mt-6 text-soft">
+      <p className="mt-6 max-w-[44ch] text-dim">
         Le tableau des tâches, l'équipe et les échéances du projet, lus en direct dans GitLab.
       </p>
       {reason && (
-        <p role="alert" className="hand hand-pen mt-6 text-[1.5rem] leading-tight">
-          {REFUSALS[reason] ?? REFUSALS.connexion}
-        </p>
+        <div role="alert" className="mt-7">
+          <div className="hazard" style={{ "--hc": "var(--alarm)" } as React.CSSProperties} aria-hidden="true" />
+          <p className="mt-3 text-alarm">{REFUSALS[reason] ?? REFUSALS.connexion}</p>
+        </div>
       )}
-      <div className="mt-9 flex flex-wrap items-center gap-6">
-        <a className="btn" href={loginUrl()}>
-          Se connecter avec le GitLab de l'école
-        </a>
-        <Stamp color="var(--pen)" tilt={-7}>
-          réservé au groupe
-        </Stamp>
-      </div>
+      <a className="btn mt-9" href={loginUrl()}>
+        Se connecter avec le GitLab de l'école
+      </a>
     </Cover>
   );
 }
@@ -59,10 +53,10 @@ export function Login() {
 export function Splash({ title, note, onRetry }: { title: string; note?: string; onRetry?: () => void }) {
   return (
     <Cover>
-      <h1 className="display text-[44px]">{title}</h1>
-      {note && <p className="mt-4 text-soft">{note}</p>}
+      <h1 className="x text-[clamp(30px,5vw,48px)]">{title}</h1>
+      {note && <p className="mt-5 text-dim">{note}</p>}
       {onRetry && (
-        <button type="button" className="btn mt-7" onClick={onRetry}>
+        <button type="button" className="btn mt-8" onClick={onRetry}>
           Réessayer
         </button>
       )}

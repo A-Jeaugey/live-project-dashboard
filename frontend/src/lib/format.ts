@@ -18,6 +18,8 @@ const monthShortFmt = fmt({ month: "short" });
 const weekdayShortFmt = fmt({ weekday: "short" });
 const weekdayFmt = fmt({ weekday: "long" });
 const clockFmt = fmt({ hour: "2-digit", minute: "2-digit" });
+const secondsFmt = fmt({ hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const numericDayFmt = fmt({ weekday: "short", day: "2-digit", month: "2-digit" });
 const keyFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ });
 
 /** Un jour « AAAA-MM-JJ » devient midi UTC, pour ne jamais glisser d'un jour selon le fuseau. */
@@ -42,6 +44,10 @@ export const monthShort = (when: When) => monthShortFmt.format(toDate(when));
 export const weekdayShort = (when: When) => weekdayShortFmt.format(toDate(when));
 export const dayNumber = (when: When) => Number(dayKey(when).slice(8));
 export const clock = (when: When) => clockFmt.format(toDate(when));
+/** « 14:02:11 », pour l'horloge du poste. */
+export const clockSeconds = (when: When) => secondsFmt.format(toDate(when));
+/** « ven. 27/11 ». */
+export const numericDay = (when: When) => numericDayFmt.format(toDate(when));
 
 export const plural = (n: number, one: string, many: string) => (Math.abs(n) > 1 ? many : one);
 

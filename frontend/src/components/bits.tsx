@@ -1,95 +1,65 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { hash } from "../lib/format";
 import { useModel } from "../lib/model";
 import type { Issue } from "../lib/types";
 
-/** Photo d'identité : l'avatar GitLab, ou l'initiale si l'image ne se charge pas. */
-export function Photo({ username, size = 34 }: { username: string; size?: number }) {
-  const member = useModel().member(username);
-  const [broken, setBroken] = useState(false);
-  const h = hash(username);
-  const name = member?.first_name ?? username;
-  const style = {
-    "--s": `${size}px`,
-    "--tint": `hsl(${h % 360} 36% 80%)`,
-    "--tilt": `${(h % 7) - 3}deg`,
-  } as CSSProperties;
+/** Teinte stable d'un membre, lisible sur fond noir. */
+export const agentColor = (username: string) => `hsl(${hash(username) % 360} 85% 72%)`;
 
+/**
+ * Jeton d'un membre : son initiale dans un cercle à sa couleur, comme sur le plan.
+ * Pas de photo : les avatars de l'école ne se chargent pas hors de son réseau, et des jetons
+ * identiques partout se lisent mieux que des vignettes.
+ */
+export function Agent({ username, size = 28 }: { username: string; size?: number }) {
+  const name = useModel().first(username);
+  const style = { "--s": `${size}px`, "--ac": agentColor(username) } as CSSProperties;
   return (
-    <span className="photo" role="img" aria-label={name} title={name} style={style}>
-      {member?.avatar_url && !broken ? (
-        <img src={member.avatar_url} alt="" referrerPolicy="no-referrer" onError={() => setBroken(true)} />
-      ) : (
-        name.slice(0, 1).toUpperCase()
-      )}
+    <span className="agent" role="img" aria-label={name} title={name} style={style}>
+      {name.slice(0, 1).toUpperCase()}
     </span>
   );
 }
 
-/** Gommette de domaine : la couleur n'est jamais seule, le nom est toujours écrit. */
-export function Gommette({ name }: { name: string }) {
+/** Domaine : la couleur n'est jamais seule, le nom est toujours écrit. */
+export function Domain({ name }: { name: string }) {
   const color = useModel().domainColor(name);
   return (
-    <span className="gommette">
+    <span className="domain">
       <i aria-hidden="true" style={{ "--c": color } as CSSProperties} />
       {name}
     </span>
   );
 }
 
-/** Entoure son contenu d'un cercle tracé à la main. */
-export function Circled({ children }: { children: ReactNode }) {
+export function Tag({
+  children,
+  color = "var(--dim)",
+  solid = false,
+}: {
+  children: ReactNode;
+  color?: string;
+  solid?: boolean;
+}) {
   return (
-    <span className="circled">
-      <svg viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M24 60C8 30 58 5 112 7c50 2 82 23 77 50-5 29-56 41-106 36C40 89 6 73 15 44 20 28 42 16 70 12" />
-      </svg>
-      <span className="relative">{children}</span>
-    </span>
-  );
-}
-
-export function Stamp({ children, color, tilt = -5 }: { children: ReactNode; color: string; tilt?: number }) {
-  return (
-    <span className="stamp" style={{ color, "--r": `${tilt}deg` } as CSSProperties}>
+    <span className="tag" data-solid={solid} style={{ color: solid ? undefined : color, "--tc": color } as CSSProperties}>
       {children}
     </span>
   );
 }
 
-/** Filtre SVG partagé qui donne aux tampons leur encre irrégulière. */
-export function InkFilter() {
-  return (
-    <svg width="0" height="0" className="absolute" aria-hidden="true">
-      <filter id="rough">
-        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="noise" />
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.7" />
-      </filter>
-    </svg>
-  );
-}
-
-/** Avancement en cases : cochées, en cours, vides. Au-delà de 36 tâches, une barre. */
-export function Ticks({ done, doing = 0, total }: { done: number; doing?: number; total: number }) {
-  const label = `${done} sur ${total}`;
+/** Avancement en segments : faits, en cours (hachurés), restants. Au-delà de 40, la barre se tasse. */
+export function Segments({ done, doing = 0, total }: { done: number; doing?: number; total: number }) {
   if (total === 0) return null;
-  if (total > 36) {
-    return (
-      <span
-        role="img"
-        aria-label={label}
-        className="inline-block h-[15px] w-40 border-[1.5px] border-ink align-middle"
-        style={{
-          background: `linear-gradient(90deg, var(--biro) ${(done / total) * 100}%, var(--ink-faint) 0 ${((done + doing) / total) * 100}%, transparent 0)`,
-        }}
-      />
-    );
-  }
+  const shown = Math.min(total, 40);
+  const scale = shown / total;
+  const d = Math.round(done * scale);
+  const g = Math.round(doing * scale);
   return (
-    <span className="ticks" role="img" aria-label={label}>
-      {Array.from({ length: total }, (_, i) => (
-        <span key={i} className="tick" data-state={i < done ? "done" : i < done + doing ? "doing" : "todo"} />
+    <span className="segs" role="img" aria-label={`${done} sur ${total}`}>
+      {Array.from({ length: shown }, (_, i) => (
+        <span key={i} className="seg" data-state={i < d ? "done" : i < d + g ? "doing" : "todo"} />
       ))}
     </span>
   );
@@ -137,43 +107,49 @@ export function OutLink({
     <a href={href ?? undefined} target="_blank" rel="noreferrer" className={`title-link ${className}`}>
       {refText && <span className="ref">{refText}</span>}
       {children}
-      <span aria-hidden="true" className="mono ml-1 text-faint">
+      <span aria-hidden="true" className="m ml-1 text-faint">
         ↗
       </span>
     </a>
   );
 }
 
-export function Section({
-  numeral,
+/** Panneau numéroté : « 01 TITRE ········ méta ». */
+export function Pane({
+  n,
   title,
-  aside,
+  meta,
   children,
+  className = "",
 }: {
-  numeral?: string;
+  n?: string;
   title: string;
-  aside?: ReactNode;
+  meta?: ReactNode;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <section>
-      <header className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        {numeral && <span className="display text-[26px] italic text-pen">{numeral}.</span>}
-        <h2 className="display text-[30px]">{title}</h2>
-        {aside && <span className="mono ml-auto text-faint">{aside}</span>}
+    <section className={className}>
+      <header className="pane-h">
+        {n && <span className="m n">{n}</span>}
+        <h2 className="c text-fg">{title}</h2>
+        <span className="leader" aria-hidden="true" />
+        {meta && <span className="m text-faint">{meta}</span>}
       </header>
       {children}
     </section>
   );
 }
 
-export function PageTitle({ title, children }: { title: string; children?: ReactNode }) {
+/** En-tête d'écran : un mot énorme, et ce qu'il faut savoir à droite. */
+export function PageHead({ title, kicker, children }: { title: string; kicker?: string; children?: ReactNode }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-      <h1 className="display text-[52px] md:text-[64px]">
-        <span className="ruler">{title}</span>
-      </h1>
-      {children && <div className="pb-2 text-soft">{children}</div>}
+    <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4 border-b border-line2 pb-6">
+      <div>
+        {kicker && <div className="m mb-3 text-go">{kicker}</div>}
+        <h1 className="x text-[clamp(44px,8vw,112px)]">{title}</h1>
+      </div>
+      {children && <div className="m pb-2 text-dim">{children}</div>}
     </header>
   );
 }

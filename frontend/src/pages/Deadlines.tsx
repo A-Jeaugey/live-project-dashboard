@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { Circled, Gommette, IssueLink, PageTitle, Photo, Section, Stamp, Ticks } from "../components/bits";
-import { countdown, dayMonth, dayNumber, longDate, monthShort, plural, weekdayShort } from "../lib/format";
+import { Agent, Domain, IssueLink, PageHead, Pane, Segments, Tag } from "../components/bits";
+import { countdown, dayMonth, longDate, plural } from "../lib/format";
 import { useModel, type Model } from "../lib/model";
+import { roomOf } from "../lib/rooms";
 import type { ColumnKey, Deadline, Issue } from "../lib/types";
 import { COLUMN_NAMES } from "../lib/voice";
 import { SetupNote } from "./Today";
 
 const REMAINING_ORDER: ColumnKey[] = ["doing", "todo", "idea"];
+const two = (n: number) => String(n).padStart(2, "0");
 
 /** Le bilan d'une échéance en Markdown, prêt à coller dans le rapport, les diapositives ou Discord. */
 function report(m: Model, d: Deadline, issues: Issue[]): string {
@@ -80,34 +82,36 @@ function Detail({ deadline }: { deadline: Deadline }) {
   };
 
   return (
-    <div className="space-y-9">
+    <div className="space-y-10">
       <header>
-        <div className="label">
-          {deadline.night !== null ? `Nuit ${deadline.night} · ` : ""}semaine du {longDate(deadline.week_of).replace(/^\S+ /, "")}
+        <div className="m text-go">
+          {deadline.night !== null ? `NUIT ${two(deadline.night)} · ` : ""}
+          SEMAINE DU {longDate(deadline.week_of).replace(/^\S+ /, "").toUpperCase()}
         </div>
-        <h2 className="display mt-2 text-[40px]">{deadline.title}</h2>
+        <h2 className="x mt-3 text-[clamp(26px,3.4vw,44px)] leading-[0.95] normal-case">{deadline.title}</h2>
         {ms ? (
           <>
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <Ticks done={ms.closed} doing={ms.doing} total={ms.total} />
-              <span>
-                {ms.total === 0
-                  ? "aucune tâche dans ce jalon"
-                  : `${ms.closed} ${plural(ms.closed, "rendue", "rendues")} · ${ms.doing} en cours · ${ms.todo} à faire`}
-              </span>
+            <div className="mt-6">
+              <div className="mb-2 flex items-baseline gap-3">
+                <span className="c text-dim">Avancement</span>
+                <span className="leader" aria-hidden="true" />
+                <span className="m text-fg">
+                  {ms.total === 0 ? "aucune tâche" : `${ms.closed} rendues · ${ms.doing} en cours · ${ms.todo} à faire`}
+                </span>
+              </div>
+              <Segments done={ms.closed} doing={ms.doing} total={ms.total} />
             </div>
-            <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
               <button type="button" className="btn" onClick={() => void copy()}>
-                Copier le bilan
+                {copied ? "Copié ✓" : "Copier le bilan"}
               </button>
-              {copied && <span className="hand hand-biro text-[1.35rem]">copié, prêt à coller</span>}
-              <a href={ms.web_url} target="_blank" rel="noreferrer">
-                ouvrir le jalon dans GitLab ↗
+              <a href={ms.web_url} target="_blank" rel="noreferrer" className="c text-[12px]">
+                Jalon dans GitLab ↗
               </a>
             </div>
           </>
         ) : (
-          <p className="mt-4 text-soft">
+          <p className="mt-5 text-dim">
             {deadline.past
               ? "Échéance passée, sans jalon dans GitLab."
               : "Aucun jalon GitLab ne correspond encore à cette échéance : les tâches ne peuvent pas y être rattachées."}
@@ -119,38 +123,36 @@ function Detail({ deadline }: { deadline: Deadline }) {
 
       {ms && (
         <>
-          <Section numeral="I" title="Ce qu'il reste" aside={`${remaining.length} ${plural(remaining.length, "tâche", "tâches")}`}>
-            <ul className="ruled">
+          <Pane n="01" title="Ce qu'il reste" meta={`${two(remaining.length)} ${plural(remaining.length, "tâche", "tâches")}`}>
+            <ul className="rows" style={{ "--gutter": "86px" } as React.CSSProperties}>
               {remaining.length === 0 ? (
                 <li>
-                  <span className="gutter" />
-                  <span className="body text-soft">
+                  <span className="k m text-go">RAS</span>
+                  <span className="text-dim">
                     {ms.total === 0 ? "Rien n'est encore rattaché à ce jalon." : "Plus rien. Tout est rendu."}
                   </span>
                 </li>
               ) : (
                 remaining.map((issue) => (
                   <li key={issue.iid}>
-                    <span className="gutter">
-                      <span className={`hand ${issue.column === "doing" ? "hand-biro" : "text-soft"}`}>
-                        {COLUMN_NAMES[issue.column].toLowerCase()}
-                      </span>
+                    <span className="k">
+                      <Tag color={issue.column === "doing" ? "var(--go)" : "var(--dim)"}>{COLUMN_NAMES[issue.column]}</Tag>
                     </span>
-                    <div className="body">
-                      <div className="min-w-0 flex-1 basis-60">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="min-w-0 flex-1">
                         <IssueLink issue={issue} />
-                        <div className="flex flex-wrap items-center gap-x-3 text-[13px] text-soft">
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3">
                           {issue.domains.map((d) => (
-                            <Gommette key={d} name={d} />
+                            <Domain key={d} name={d} />
                           ))}
                           {issue.stale_days !== null && (
-                            <span className="text-pen">sans nouvelles depuis {issue.stale_days} jours</span>
+                            <span className="m text-warn">{issue.stale_days} j sans nouvelles</span>
                           )}
                         </div>
                       </div>
-                      <span className="flex -space-x-2">
+                      <span className="flex -space-x-1.5">
                         {issue.assignees.map((username) => (
-                          <Photo key={username} username={username} size={30} />
+                          <Agent key={username} username={username} size={26} />
                         ))}
                       </span>
                     </div>
@@ -158,35 +160,42 @@ function Detail({ deadline }: { deadline: Deadline }) {
                 ))
               )}
             </ul>
-          </Section>
+          </Pane>
 
           {byDomain.length > 0 && (
-            <Section numeral="II" title="Par domaine">
-              <ul className="m-0 grid list-none grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-5 gap-y-3 p-0">
+            <Pane n="02" title="Par salle">
+              <ul className="rows" style={{ "--gutter": "150px" } as React.CSSProperties}>
                 {byDomain.map((d) => (
-                  <li key={d.name} className="contents">
-                    <Gommette name={d.name} />
-                    <Ticks done={d.done} doing={d.doing} total={d.total} />
-                    <span className={`mono ${d.done === 0 ? "text-pen" : "text-soft"}`}>
-                      {d.done} / {d.total}
+                  <li key={d.name} className="items-center">
+                    <span className="k">
+                      <span className="c block text-fg">{roomOf(d.name)}</span>
+                      <Domain name={d.name} />
+                    </span>
+                    <span className="flex items-center gap-4">
+                      <span className="flex-1">
+                        <Segments done={d.done} doing={d.doing} total={d.total} />
+                      </span>
+                      <span className={`m ${d.done === 0 ? "text-warn" : "text-dim"}`}>
+                        {d.done}/{d.total}
+                      </span>
                     </span>
                   </li>
                 ))}
               </ul>
-            </Section>
+            </Pane>
           )}
 
-          <Section numeral={byDomain.length > 0 ? "III" : "II"} title="Qui a rendu quoi">
-            <table className="form-table">
+          <Pane n={byDomain.length > 0 ? "03" : "02"} title="Qui a rendu quoi">
+            <table className="grid-table border-t border-line2">
               <thead>
                 <tr>
-                  <th scope="col" className="label">
-                    Élève
+                  <th scope="col" className="c pt-3">
+                    Membre
                   </th>
-                  <th scope="col" className="label w-[110px]">
+                  <th scope="col" className="c w-[100px] pt-3">
                     Rendues
                   </th>
-                  <th scope="col" className="label w-[110px]">
+                  <th scope="col" className="c w-[100px] pt-3">
                     En cours
                   </th>
                 </tr>
@@ -198,35 +207,34 @@ function Detail({ deadline }: { deadline: Deadline }) {
                     <tr key={member.username}>
                       <th scope="row" className="font-normal">
                         <span className="flex items-center gap-3">
-                          <Photo username={member.username} size={28} />
+                          <Agent username={member.username} size={26} />
                           {member.first_name}
                         </span>
                       </th>
-                      <td className="mono">{mine.filter((i) => i.column === "done").length}</td>
-                      <td className="mono">{mine.filter((i) => i.column === "doing").length}</td>
+                      <td className="m text-[13px]">{two(mine.filter((i) => i.column === "done").length)}</td>
+                      <td className="m text-[13px]">{two(mine.filter((i) => i.column === "doing").length)}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
-          </Section>
+          </Pane>
         </>
       )}
     </div>
   );
 }
 
-/** Les échéances, présentées comme un cahier de textes : une date, un devoir à rendre. */
+/** Les échéances du calendrier officiel : cinq nuits à passer. */
 export function Deadlines() {
   const m = useModel();
   const [params, setParams] = useSearchParams();
+  const detail = useRef<HTMLDivElement>(null);
 
   const all = [...m.snap.deadlines].sort((a, b) => a.week_of.localeCompare(b.week_of));
   const next = m.nextDeadline;
   const selected = m.deadline(params.get("e")) ?? next ?? all[all.length - 1];
   const left = all.filter((d) => !d.past).length;
-
-  const detail = useRef<HTMLDivElement>(null);
 
   const select = (key: string) => {
     setParams(
@@ -244,68 +252,61 @@ export function Deadlines() {
   };
 
   return (
-    <div className="space-y-9 px-5 py-7 md:px-10 md:py-10">
-      <PageTitle title="Cahier de textes">
-        {left} {plural(left, "échéance", "échéances")} à venir
-      </PageTitle>
+    <div className="space-y-10 py-8 md:py-10">
+      <PageHead title="Échéances" kicker="04 · LE CALENDRIER OFFICIEL">
+        {two(left)} À VENIR
+      </PageHead>
 
-      <div className="grid gap-x-14 gap-y-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <ol className="m-0 list-none self-start border-t border-rule p-0">
+      <div className="grid gap-x-14 gap-y-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+        <ol className="list-none self-start border-t border-line2 p-0">
           {all.map((d) => {
             const isNext = d.key === next?.key;
             const isSelected = d.key === selected?.key;
             return (
-              <li
-                key={d.key}
-                className="border-b border-rule"
-                style={isSelected ? { background: "color-mix(in srgb, var(--hl) 22%, transparent)" } : undefined}
-              >
+              <li key={d.key} className={`border-b border-line ${isSelected ? "brk bg-raised" : ""}`}>
                 <button
                   type="button"
                   aria-pressed={isSelected}
                   onClick={() => select(d.key)}
-                  className="grid w-full grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-4 border-0 bg-transparent px-2 py-4 text-left"
+                  className="grid w-full grid-cols-[58px_minmax(0,1fr)_auto] items-center gap-4 border-0 bg-transparent px-3 py-5 text-left"
                 >
-                  <span className="text-center leading-none">
-                    <span className="label block">{weekdayShort(d.week_of)}</span>
-                    <span className="display my-1 block text-[44px]">{dayNumber(d.week_of)}</span>
-                    <span className="label block">{monthShort(d.week_of)}</span>
+                  <span className={`x text-[38px] ${d.past ? "text-faint" : isNext ? "text-alarm" : "text-fg"}`}>
+                    {d.night !== null ? two(d.night) : "00"}
                   </span>
                   <span className="min-w-0">
-                    <span className={`hand text-[1.25rem] ${isNext ? "hand-pen" : "text-soft"}`}>
-                      {d.night !== null ? `nuit ${d.night}` : "avant la première nuit"}
-                    </span>
-                    <span className={`display block text-[27px] ${d.past ? "text-soft line-through decoration-1" : ""}`}>
+                    <span className={`x block text-[19px] leading-[1] normal-case ${d.past ? "text-faint line-through" : ""}`}>
                       {d.title}
                     </span>
-                    <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-soft">
+                    <span className="m mt-2 block text-faint">
+                      SEMAINE DU {dayMonth(d.week_of).toUpperCase()}
+                      {d.night === null && " · AVANT LA PREMIÈRE NUIT"}
+                    </span>
+                    <span className="mt-3 flex items-center gap-3">
                       {d.milestone ? (
                         d.milestone.total > 0 ? (
                           <>
-                            <Ticks done={d.milestone.closed} doing={d.milestone.doing} total={d.milestone.total} />
-                            <span className="mono">
-                              {d.milestone.closed} / {d.milestone.total}
+                            <span className="w-44 max-w-full">
+                              <Segments done={d.milestone.closed} doing={d.milestone.doing} total={d.milestone.total} />
+                            </span>
+                            <span className="m text-dim">
+                              {d.milestone.closed}/{d.milestone.total}
                             </span>
                           </>
                         ) : (
-                          "jalon créé, encore vide"
+                          <span className="m text-faint">JALON CRÉÉ, ENCORE VIDE</span>
                         )
                       ) : d.past ? null : (
-                        <span className="hand hand-pen text-[1.2rem]">jalon à créer dans GitLab</span>
+                        <span className="m text-warn">JALON À CRÉER DANS GITLAB</span>
                       )}
                     </span>
                   </span>
-                  <span className="pr-2">
+                  <span className="pr-1 text-right">
                     {d.past ? (
-                      <Stamp color="var(--ok)" tilt={-8}>
-                        passée
-                      </Stamp>
-                    ) : isNext ? (
-                      <span className="hand hand-pen text-[34px]" style={{ transform: "rotate(-4deg)" }}>
-                        <Circled>{countdown(d)}</Circled>
-                      </span>
+                      <Tag color="var(--faint)">passée</Tag>
                     ) : (
-                      <span className="mono text-[15px] text-soft">{countdown(d)}</span>
+                      <span className={`x text-[24px] whitespace-nowrap ${isNext ? "text-alarm" : "text-dim"}`}>
+                        {countdown(d)}
+                      </span>
                     )}
                   </span>
                 </button>
@@ -314,7 +315,7 @@ export function Deadlines() {
           })}
         </ol>
 
-        <div ref={detail} className="scroll-mt-4">
+        <div ref={detail} className="scroll-mt-20">
           {selected && <Detail key={selected.key} deadline={selected} />}
         </div>
       </div>

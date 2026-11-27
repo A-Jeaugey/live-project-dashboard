@@ -1,85 +1,69 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link, NavLink } from "react-router";
-import { agoPrecise } from "../lib/format";
+import { agoPrecise, clockSeconds, numericDay } from "../lib/format";
 import { useLive } from "../lib/live";
 import { useModel, useNow } from "../lib/model";
 import { activityVerb, COLUMN_NAMES } from "../lib/voice";
-import { InkFilter, Photo } from "./bits";
+import { Agent } from "./bits";
 
 const NAV = [
-  { to: "/", label: "Aujourd'hui", short: "Jour", color: "#d9482b" },
-  { to: "/tableau", label: "Tableau", short: "Tableau", color: "#d99a12" },
-  { to: "/equipe", label: "Équipe", short: "Équipe", color: "#12957b" },
-  { to: "/echeances", label: "Échéances", short: "Dates", color: "#3b6fd4" },
-  { to: "/projet", label: "Projet", short: "Projet", color: "#7c5cd6" },
+  { to: "/", label: "Poste", n: "01" },
+  { to: "/tableau", label: "Tableau", n: "02" },
+  { to: "/equipe", label: "Équipe", n: "03" },
+  { to: "/echeances", label: "Échéances", n: "04" },
+  { to: "/projet", label: "Projet", n: "05" },
 ];
 
-function SyncBadge() {
-  const { snap } = useModel();
-  const { connected } = useLive();
-  const now = useNow(5000);
-  const { ok, last_success_at, last_error } = snap.sync;
-  const when = last_success_at ? agoPrecise(last_success_at, now) : "jamais";
-
+function Clock() {
+  const now = useNow(1000);
   return (
-    <span
-      className="mono flex items-center gap-2 text-[12px] text-soft"
-      title={last_error ?? (connected ? "Mises à jour en direct" : "Flux en direct interrompu, nouvelle tentative en cours")}
-    >
-      <span
-        aria-hidden="true"
-        className="h-2 w-2 rounded-full"
-        style={{ background: ok && connected ? "var(--ok)" : "var(--pen)" }}
-      />
-      {ok ? "GitLab à jour" : "GitLab ne répond pas"}
-      <span className="hidden sm:inline">{ok ? `· ${when}` : `· dernière lecture ${when}`}</span>
+    <span className="m hidden text-dim xl:inline">
+      {numericDay(now).replace(".", "").toUpperCase()} <span className="text-fg">{clockSeconds(now)}</span>
     </span>
   );
 }
 
-function ThemeToggle() {
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "jour");
-  const other = theme === "nuit" ? "jour" : "nuit";
+function Sync() {
+  const { snap } = useModel();
+  const { connected } = useLive();
+  const now = useNow(5000);
+  const { ok, last_success_at, last_error } = snap.sync;
+  const healthy = ok && connected;
+  const when = last_success_at ? agoPrecise(last_success_at, now).replace("il y a ", "") : "jamais";
+
   return (
-    <button
-      type="button"
-      className="quiet"
-      onClick={() => {
-        document.documentElement.dataset.theme = other;
-        try {
-          localStorage.setItem("theme", other);
-        } catch {
-          // préférence non mémorisée, sans gravité
-        }
-        setTheme(other);
-      }}
+    <span
+      className="m flex items-center gap-2 text-dim"
+      title={last_error ?? (connected ? "Mises à jour en direct" : "Flux en direct interrompu, nouvelle tentative en cours")}
     >
-      <span className="hidden sm:inline">{other === "nuit" ? "passer au " : "revenir au "}</span>
-      {other === "nuit" ? "tableau noir" : "papier"}
-    </button>
+      <span
+        className="led"
+        data-live={healthy}
+        style={{ "--c": healthy ? "var(--go)" : "var(--alarm)" } as React.CSSProperties}
+      />
+      <span className={ok ? "" : "text-alarm"}>{ok ? "GITLAB" : "GITLAB MUET"}</span>
+      <span className="hidden whitespace-nowrap lg:inline">{when.toUpperCase()}</span>
+    </span>
   );
 }
 
-/** Petits mots glissés en bas de l'écran quand quelque chose se passe dans GitLab pendant qu'on regarde. */
+/** Ce qui se passe dans GitLab pendant qu'on regarde, annoncé en bas de l'écran. */
 function LiveNotes() {
   const { news } = useLive();
   const m = useModel();
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed bottom-[72px] left-4 z-30 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2 md:bottom-6 md:left-6"
+      className="pointer-events-none fixed bottom-[72px] left-4 z-30 flex w-[min(380px,calc(100vw-2rem))] flex-col gap-2 md:bottom-6 md:left-6"
     >
-      {news.map((note, index) => (
-        <div
-          key={note.id}
-          className="fiche note-in pointer-events-auto px-4 py-3 text-[14px]"
-          style={{ transform: `rotate(${index % 2 === 0 ? -0.8 : 0.6}deg)` }}
-        >
+      {news.map((note) => (
+        <div key={note.id} className="brk note-in pointer-events-auto border border-line2 bg-raised px-4 py-3">
+          <div className="m mb-1 text-go">EN DIRECT</div>
           {note.kind === "activity" ? (
             <>
               <strong className="font-semibold">{m.who(note.activity)}</strong> {activityVerb(note.activity)}{" "}
               {note.activity.target?.iid != null && (
-                <span className="mono text-faint">
+                <span className="m text-faint">
                   {note.activity.target.type === "merge_request" ? "!" : "#"}
                   {note.activity.target.iid}{" "}
                 </span>
@@ -88,12 +72,12 @@ function LiveNotes() {
             </>
           ) : (
             <>
-              {note.by ? (
+              {note.by && (
                 <>
                   <strong className="font-semibold">{m.first(note.by)}</strong> a pris{" "}
                 </>
-              ) : null}
-              <span className="mono text-faint">#{note.iid}</span> {note.title}
+              )}
+              <span className="m text-faint">#{note.iid}</span> {note.title}
               {!note.by && <> passe dans « {COLUMN_NAMES[note.column]} »</>}
             </>
           )}
@@ -112,48 +96,47 @@ export function Shell({ children }: { children: ReactNode }) {
   const { me } = useModel();
 
   return (
-    <div className="pb-20 md:pb-10">
-      <InkFilter />
+    <div className="pb-24 md:pb-16">
+      <header className="sysbar">
+        <div className="wrap flex items-center gap-x-5 lg:gap-x-8">
+          <Link to="/" className="flex items-baseline gap-3 py-3 text-fg hover:no-underline">
+            <span className="x text-[20px]">
+              5N<span className="text-go">@</span>E
+            </span>
+            <span className="c hidden text-dim lg:inline">Poste de nuit</span>
+          </Link>
 
-      <header className="wrap flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 pt-5 pb-4">
-        <Link to="/" className="flex items-baseline gap-3 text-ink no-underline hover:no-underline">
-          <span className="display text-[28px] italic">5 Nights at EPITA</span>
-          <span className="label hidden sm:inline">carnet de bord</span>
-        </Link>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <SyncBadge />
-          <ThemeToggle />
-          <span className="flex items-center gap-2">
-            <Photo username={me.username} size={28} />
-            <button type="button" className="quiet" onClick={() => void logout()}>
-              sortir
-            </button>
-          </span>
+          <nav aria-label="Navigation principale" className="hidden items-center gap-4 md:flex lg:gap-6">
+            {NAV.map((item) => (
+              <NavLink key={item.to} to={item.to} end={item.to === "/"} className="nav-item">
+                <span className="m hidden lg:inline">{item.n}</span>
+                <span className="c">{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-4 whitespace-nowrap lg:gap-5">
+            <Clock />
+            <Sync />
+            <span className="flex items-center gap-2.5">
+              <Agent username={me.username} size={26} />
+              <button type="button" className="quiet" onClick={() => void logout()}>
+                sortir
+              </button>
+            </span>
+          </div>
         </div>
       </header>
 
-      <nav aria-label="Navigation principale" className="wrap tabs hidden md:flex">
-        {NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/"}
-            className="tab"
-            style={{ "--c": item.color } as CSSProperties}
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-
-      <main className="wrap sheet">{children}</main>
+      <main className="wrap">{children}</main>
 
       <LiveNotes />
 
       <nav aria-label="Navigation principale" className="bottom-nav md:hidden">
         {NAV.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.to === "/"} style={{ "--c": item.color } as CSSProperties}>
-            {item.short}
+          <NavLink key={item.to} to={item.to} end={item.to === "/"}>
+            <span className="m">{item.n}</span>
+            <span className="c text-[11.5px]">{item.label}</span>
           </NavLink>
         ))}
       </nav>

@@ -1,17 +1,19 @@
-# Carnet de bord — 5 Nights at EPITA
+# Tableau de bord — 5 Nights at EPITA
 
 Outil interne du groupe : un **dashboard web** (et bientôt un **bot Discord**) qui donne une vue commune et
 vivante du projet *5 Nights at EPITA*, jeu d'horreur 3D en Python / Panda3D, projet annuel de 1re année à
 EPITA Lyon.
 
-Les tâches vivent dans GitLab (`arthur.jeaugey/5-nights-at-epita` sur `https://gitlab.cri.epita.fr/`). Le carnet
+Les tâches vivent dans GitLab (`arthur.jeaugey/5-nights-at-epita` sur `https://gitlab.cri.epita.fr/`). L'outil
 ne garde jamais sa propre version des tâches : il lit GitLab et, à partir de la phase 2, y écrira.
 
-![Écran d'accueil](docs/apercu/aujourdhui.jpg)
+L'accueil est le **plan de l'étage, de nuit** : une salle par domaine, un repère par tâche, chaque membre posé
+dans la salle de sa tâche, et la prochaine échéance en prof qui remonte le couloir vers la sortie de secours.
 
-Autres captures : [tableau](docs/apercu/tableau.jpg), [équipe](docs/apercu/equipe.jpg),
-[échéances](docs/apercu/echeances.jpg), [thème nuit](docs/apercu/tableau-noir.jpg),
-[téléphone](docs/apercu/telephone.jpg). Les tâches visibles sur ces images sont des **données d'exemple**.
+![Écran d'accueil](docs/apercu/poste.jpg)
+
+Autres captures : [tableau](docs/apercu/tableau.jpg), [détail d'une tâche](docs/apercu/detail.jpg),
+[équipe](docs/apercu/equipe.jpg), [échéances](docs/apercu/echeances.jpg), [téléphone](docs/apercu/telephone.jpg). Les tâches visibles sur ces images sont des **données d'exemple**.
 
 ## État
 
@@ -93,7 +95,7 @@ Prérequis : Docker, un domaine géré par Cloudflare, le rôle Maintainer ou Ow
    docker compose up -d
    ```
 
-6. **Webhook GitLab** (facultatif mais recommandé : sans lui, le carnet interroge GitLab toutes les 30 secondes).
+6. **Webhook GitLab** (facultatif mais recommandé : sans lui, l'outil interroge GitLab toutes les 30 secondes).
    *Settings → Webhooks* : URL `https://<sous-domaine>/hooks/gitlab`, le secret choisi dans `.env`, événements
    *Issues, Merge requests, Comments, Pipelines, Push, Tag push, Milestones*. Cliquer **Test**.
 7. **Vérifier.** Se connecter, ouvrir l'onglet **Projet** : la rubrique *Synchronisation* indique si GitLab répond

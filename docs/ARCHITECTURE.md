@@ -198,10 +198,10 @@ labels, les seuils et les horaires. Secrets : `.env`, jamais versionné.
   refusé. Les doublons sont écartés grâce à l'en-tête `Idempotency-Key`. La signature HMAC a été écrite d'après
   la convention Standard Webhooks ; elle reste à confirmer avec un vrai webhook de l'instance.
 - Toute route de l'API exige une session valide ; toute requête qui modifie quelque chose doit en plus venir de
-  l'origine du carnet (en-tête `Origin`).
+  l'origine du tableau de bord (en-tête `Origin`).
 - En-têtes de sécurité sur chaque réponse, dont une politique de contenu (CSP) qui n'autorise que les scripts
   servis par l'application.
-- Après connexion, le retour ne se fait que vers une page du carnet, jamais vers une autre adresse.
+- Après connexion, le retour ne se fait que vers une page du tableau de bord, jamais vers une autre adresse.
 - Le conteneur tourne sans privilèges ; seul le reverse proxy est exposé.
 - Le bot ignore tout autre serveur Discord et tout compte non lié.
 

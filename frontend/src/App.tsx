@@ -38,12 +38,12 @@ function Signed({ me }: { me: Me }) {
     return (
       <Splash
         title="Le serveur ne répond pas"
-        note="Impossible de lire l'état du projet. Ça vient du carnet, pas de toi."
+        note="Impossible de lire l'état du projet. Ça vient du serveur, pas de toi."
         onRetry={() => void snapshot.refetch()}
       />
     );
   }
-  return <Splash title="On sort les copies…" />;
+  return <Splash title="Mise sous tension…" />;
 }
 
 export function App() {
@@ -61,5 +61,5 @@ export function App() {
       />
     );
   }
-  return <Splash title="On sort les copies…" />;
+  return <Splash title="Mise sous tension…" />;
 }

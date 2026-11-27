@@ -1,7 +1,8 @@
 # Expérience utilisateur
 
-> Statut : parcours et écrans **validés par Arthur le 27 novembre 2026**, ajouts compris. La première maquette
-> a été rejetée pour son apparence (trop générique) ; la direction visuelle actuelle est décrite en section 8.
+> Statut : parcours et écrans **validés par Arthur le 27 novembre 2026**, ajouts compris.
+> L'apparence a été refaite deux fois à sa demande (trop générique) ; la direction actuelle, « poste de nuit »,
+> est décrite en section 8 et attend son avis.
 > Les éléments marqués *(ajout proposé)* ne figuraient pas dans le cahier des charges ; ils ont été acceptés.
 
 ## 1. Idées directrices
@@ -22,19 +23,19 @@
 Six entrées, identiques sur ordinateur (barre du haut) et sur téléphone (barre du bas, les deux dernières
 derrière « Plus ») :
 
-| Entrée | Nom à l'écran | Question | Contenu du cahier des charges couvert |
-|---|---|---|---|
-| **Aujourd'hui** | la copie du jour | Où en est-on, et qu'est-ce qui m'attend ? | Compte à rebours, activité récente, résumé équipe et santé |
-| **Tableau** | Tableau | Qu'est-ce que je prends ? | Tableau des tâches, filtres, actions |
-| **Équipe** | Feuille d'appel | Qui fait quoi ? | Qui travaille sur quoi, membres sans tâche, tâches dormantes |
-| **Échéances** | Cahier de textes | Est-on prêts ? | Jalons, comptes à rebours, avancement, bilan à copier |
-| **Projet** | Projet | Le dépôt est-il en bonne santé ? | Dernière version jouable, merge requests en attente, pipelines, journal complet, état de la synchro |
-| **Transparence IA** | (phase 3) | Comment utilise-t-on l'IA ? | Lecture d'`AI_LOG.md` et des commits `[IA]`, répartitions |
+| Entrée | Question | Contenu du cahier des charges couvert |
+|---|---|---|
+| **01 Poste** | Où en est-on, et qu'est-ce qui m'attend ? | Compte à rebours, plan de l'étage, alertes, activité récente, version jouable |
+| **02 Tableau** | Qu'est-ce que je prends ? | Tableau des tâches, filtres, actions |
+| **03 Équipe** | Qui fait quoi ? | Qui travaille sur quoi, membres sans tâche, tâches dormantes |
+| **04 Échéances** | Est-on prêts ? | Jalons, comptes à rebours, avancement, bilan à copier |
+| **05 Projet** | Le dépôt est-il en bonne santé ? | Dernière version jouable, merge requests en attente, pipelines, main courante complète, état de la synchro |
+| **Transparence IA** (phase 3) | Comment utilise-t-on l'IA ? | Lecture d'`AI_LOG.md` et des commits `[IA]`, répartitions |
 
 Les cinq échéances à préparer sont numérotées **nuit 1 à nuit 5** (le projet s'appelle *5 Nights at EPITA* et il
 reste exactement cinq échéances). Le nom complet de l'échéance reste toujours affiché à côté.
 
-Deux vues sans entrée dans le menu, ouvertes depuis « Aujourd'hui », la palette de commandes ou un lien Discord :
+Deux vues sans entrée dans le menu, ouvertes depuis l'accueil, la palette de commandes ou un lien Discord :
 **Point hebdo** *(ajout proposé)* et **détail d'une tâche**.
 
 Dans toute l'interface, un indicateur « GitLab · à jour il y a N s » montre la fraîcheur des données. Si GitLab ne
@@ -44,7 +45,7 @@ répond plus, il devient « dernière synchro il y a N min » et les actions d'�
 
 ### 3.1 Arriver le matin et voir où en est le projet
 
-1. Ouvrir le dashboard : la session est encore valide, on arrive directement sur **Aujourd'hui**.
+1. Ouvrir le dashboard : la session est encore valide, on arrive directement sur le **Poste**.
 2. Lire, de haut en bas, sans cliquer :
    - le compte à rebours de la prochaine échéance et l'avancement de son jalon ;
    - la frise des cinq échéances ;
@@ -114,21 +115,20 @@ les mêmes filtres chaque lundi.
 
 ## 4. Écrans
 
-La première maquette (hors du repo) est abandonnée. La référence est l'application elle-même, lancée avec des
-données d'exemple (`README.md`).
+La référence est l'application elle-même, lancée avec des données d'exemple (`README.md`), et les captures de
+`docs/apercu/`.
 
-### 4.1 Aujourd'hui
+### 4.1 Poste (accueil)
 
-- Bandeau : `J-N`, nom de l'échéance, « semaine du … », barre d'avancement du jalon, liens vers le jalon et le
-  point hebdo.
-- Frise des échéances à venir, chacune avec son `J-N`.
-- **Demande de l'attention** : liste typée (Relecture, Dormante, Disponible, À trier), un lien d'action par ligne.
-  Si la liste est vide : « Rien ne demande d'attention ».
-- **Depuis ta dernière visite** : fil d'événements filtré sur la période (issues, merge requests, pipelines,
-  commentaires). La date de dernière visite est gardée dans le navigateur.
-- **À toi** : tâches en cours, relectures attendues.
-- **Qui fait quoi** : une ligne par membre.
-- **Dernière version jouable** : selon la règle configurée (voir 4.5).
+- À gauche : `J-N` en très gros, le nom de l'échéance, « semaine du … », les verrous de la sortie de secours
+  (avancement du jalon) et la **consigne** : une à trois phrases calculées, sans IA, qui disent ce qui presse.
+- À droite : le **plan de l'étage** (section 8.1).
+- **01 À toi** : ses tâches en cours, les relectures qu'on attend de soi, ses merge requests en attente.
+- **02 Alertes** : relectures en retard, tâches qui dorment, membres sans tâche, tâches à trier. « RAS » si la
+  liste est vide.
+- **03 Main courante** : ce qui s'est passé depuis la dernière visite (date gardée dans le navigateur).
+- **04 Version jouable**, selon la règle configurée (voir 4.5), et la note de mise en place s'il manque des labels
+  ou des jalons dans GitLab.
 
 ### 4.2 Tableau
 
@@ -274,32 +274,50 @@ Chaque déplacement est **une seule** requête GitLab sur l'issue.
 
 **Je prends** équivaut à « vers En cours » avec assignation à soi.
 
-## 8. Apparence : « le carnet »
+## 8. Apparence : « poste de nuit »
 
-Le projet est présenté comme une **copie d'élève annotée par un prof** : le jeu met en scène des enseignants,
-le carnet leur emprunte leur stylo rouge.
+Le projet est vu depuis le poste de garde de l'étage, la nuit. L'idée centrale n'est pas une palette mais un
+**objet** : le plan de l'étage, qui occupe l'accueil et se lit comme un état du projet.
 
-| Élément | Rôle |
+### 8.1 Le plan de l'étage
+
+| Sur le plan | Dans le projet |
 |---|---|
-| Papier crème, encre noire | Le contenu |
-| **Stylo rouge**, écriture manuscrite | Uniquement ce qui demande de l'attention : retards, tâches qui dorment, manques |
-| **Stylo bleu**, écriture manuscrite | Ce que l'on fait soi-même (« en cours ») et les liens |
-| Marge rouge à gauche des listes | L'endroit où lire les alertes : parcourir la marge suffit |
-| En-tête de copie | Sur l'accueil : nom, épreuve en cours, et dans la case de la note, le compte à rebours entouré |
-| Appréciation | Une à trois phrases calculées (sans IA) qui résument ce qui presse |
-| Post-it jaunes | Les idées |
-| Fiches bristol | Les tâches décidées ; tampon « FAIT » sur celles qui sont fermées |
-| Photos d'identité | Les membres |
-| Gommettes | Les domaines ; le nom du domaine est toujours écrit à côté |
-| Cases cochées | L'avancement d'un jalon |
-| Intercalaires | La navigation |
+| Une salle | Un domaine (`gameplay` → Foyer, `profs` → Salle des profs, `3d` → Atelier 3D, `son` → Studio son, `code` → Salle machines, `ui` → Hall, `orga` → Scolarité) |
+| Un repère dans une salle | Une tâche : rond = idée, carré vide = à faire, carré plein = en cours, coche = faite récemment |
+| Un jeton à initiale | Un membre, posé dans la salle de sa tâche en cours |
+| Un jeton dans le couloir | Un membre sans tâche en cours |
+| « Vous êtes ici », en rouge | La personne connectée |
+| Le prof rouge dans le couloir | La prochaine échéance ; sa position est la part du temps déjà écoulée |
+| Les verrous de la sortie de secours | Les tâches du jalon ; fermer une tâche en ouvre un |
+| Une salle au contour ambre qui clignote | Une tâche en cours sans activité depuis 14 jours |
+| L'escalier | Les tâches sans domaine, à trier |
 
-La nuit, la copie devient un **tableau noir** et les stylos des craies ; les post-it restent jaunes. Le thème suit
-le réglage du système et se change d'un clic.
+Le plan est cliquable (une salle ouvre le tableau filtré sur son domaine, un repère ouvre la tâche), utilisable
+au clavier, et se met à jour en direct : quand quelqu'un prend une tâche, son jeton change de salle.
 
-Typographie : Instrument Serif pour les titres, IBM Plex Sans pour le texte, IBM Plex Mono pour les numéros et
-les dates, Caveat pour l'écriture manuscrite. Les polices sont servies par l'application elle-même, sans appel à
-un service extérieur.
+### 8.2 Le système graphique
 
-Règles tenues partout : contraste suffisant dans les deux thèmes, zones tactiles d'au moins 44 px sur téléphone,
-aucune information portée par la couleur seule, animations coupées si le système le demande.
+- **Fond noir, traits fins**, comme un plan technique rétro-éclairé ; pas de cartes arrondies ni d'ombres.
+- **Trois couleurs qui veulent dire quelque chose** : le vert des issues de secours pour ce qui avance et ce qui
+  est cliquable, l'ambre pour ce qui traîne, le rouge pour ce qui presse et pour « vous êtes ici ».
+- **Une seule famille de caractères, Archivo, à ses deux extrêmes** : très large et grasse pour les titres et les
+  gros chiffres (« J-10 », le nom de chaque écran), très étroite pour les libellés. JetBrains Mono pour tout ce qui
+  se compte ou s'horodate.
+- **Panneaux numérotés** (« 01 À TOI ······· 02 »), pointillés de conduite, coins en équerre, bande de
+  signalisation au-dessus des alertes.
+- **Les mêmes signes partout** : les repères du plan sont aussi les en-têtes des colonnes du tableau.
+- **Mouvement utile** : horloge du poste, voyant de synchronisation, repères qui pulsent quand ils sont en cours,
+  balayage du plan, et un message « en direct » quand quelque chose change dans GitLab.
+
+Les polices sont servies par l'application elle-même. Contraste suffisant partout, zones tactiles d'au moins
+44 px sur téléphone, aucune information portée par la couleur seule, animations coupées si le système le demande.
+
+### 8.3 Directions abandonnées
+
+1. Maquette initiale, sombre à cartes arrondies : rejetée, trop générique.
+2. « Le carnet » (copie d'élève annotée au stylo rouge, papier crème) : construite puis rejetée, même reproche.
+
+Références regardées avant la direction actuelle : recherches ciblées sur Behance (interfaces de science-fiction,
+centres de commande, plans techniques) et le site de Linear. Awwwards refuse les navigateurs automatisés et n'a
+pu être consulté que par la recherche.
